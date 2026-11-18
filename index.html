@@ -94,6 +94,12 @@ body {
 .opt-group-header i { font-size: 14px; color: var(--card-header-icon); }
 .opt-group-title { font-size: 8.5pt; font-weight: 700; color: var(--card-header-title); text-transform: uppercase; letter-spacing: .05em; }
 .opt-group-body { padding: 12px; }
+.opt-group-header { cursor: pointer; user-select: none; }
+.opt-group-header:hover { background: #f1f5f9; }
+.opt-group-header .chev { font-size: 15px; color: var(--card-header-icon); transition: transform .15s; }
+.opt-group.collapsed .opt-group-header { border-bottom-color: transparent; }
+.opt-group.collapsed .opt-group-body { display: none; }
+.opt-group.collapsed .chev { transform: rotate(-90deg); }
 
 input[type=text], input[type=number], input[type=date], select, textarea {
   border: 1.5px solid var(--input-border); border-radius: 6px; padding: 6px 9px;
@@ -390,6 +396,24 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
           </div>
         </div>
 
+        <!-- TEXT -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-typography"></i><span class="opt-group-title">Text &amp; Font</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row"><label for="title">Sheet title</label><input type="text" id="title"></div>
+            <div class="toggle-row"><input type="checkbox" id="showPeriod"><label for="showPeriod">Include “Per.” blank</label></div>
+            <div class="grid-2">
+              <div class="field-row"><label for="font">Font</label><select id="font"></select></div>
+              <div class="field-row"><label for="fontScale">Text size</label>
+                <select id="fontScale"><option value="0.9">Small</option><option value="1">Normal</option><option value="1.12">Large</option></select>
+              </div>
+            </div>
+            <div class="field-row"><span class="lbl">Header style</span>
+              <div class="seg" data-key="headerStyle"><button data-v="solid"><i class="ti ti-square-filled"></i> Solid black</button><button data-v="outline"><i class="ti ti-square"></i> Outline (saves ink)</button></div>
+            </div>
+          </div>
+        </div>
+
         <!-- LAYOUT -->
         <div class="opt-group">
           <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-layout-grid"></i><span class="opt-group-title">Layout</span></div></div>
@@ -464,24 +488,6 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
           </div>
         </div>
 
-        <!-- TEXT -->
-        <div class="opt-group">
-          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-typography"></i><span class="opt-group-title">Text &amp; Font</span></div></div>
-          <div class="opt-group-body">
-            <div class="field-row"><label for="title">Sheet title</label><input type="text" id="title"></div>
-            <div class="toggle-row"><input type="checkbox" id="showPeriod"><label for="showPeriod">Include “Per.” blank</label></div>
-            <div class="grid-2">
-              <div class="field-row"><label for="font">Font</label><select id="font"></select></div>
-              <div class="field-row"><label for="fontScale">Text size</label>
-                <select id="fontScale"><option value="0.9">Small</option><option value="1">Normal</option><option value="1.12">Large</option></select>
-              </div>
-            </div>
-            <div class="field-row"><span class="lbl">Header style</span>
-              <div class="seg" data-key="headerStyle"><button data-v="solid"><i class="ti ti-square-filled"></i> Solid black</button><button data-v="outline"><i class="ti ti-square"></i> Outline (saves ink)</button></div>
-            </div>
-          </div>
-        </div>
-
         <!-- ABSENCE -->
         <div class="opt-group">
           <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-user-off"></i><span class="opt-group-title">Absence Reminder</span></div></div>
@@ -529,6 +535,7 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
    ════════════════════════════════════════════════ */
 const LS_SETTINGS = 'humbleBellwork.settings.v1';
 const LS_LOGO = 'humbleBellwork.logo.v1';
+const LS_COLLAPSED = 'humbleBellwork.collapsed.v1';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -706,6 +713,25 @@ function initUI() {
     const snapped = snapToMonday(picked);
     if (snapped.getTime() !== picked.getTime()) toast(`Moved to Monday, ${md(snapped)}`);
     monday = snapped; $('monday').value = toISO(monday); commit();
+  });
+
+  // Collapsible sections (remembered on this computer)
+  let collapsed = {};
+  try { collapsed = JSON.parse(lsGet(LS_COLLAPSED) || '{}'); } catch (e) {}
+  document.querySelectorAll('.opt-group').forEach(g => {
+    const head = g.querySelector('.opt-group-header');
+    const key = g.querySelector('.opt-group-title').textContent.trim();
+    head.insertAdjacentHTML('beforeend', '<i class="ti ti-chevron-down chev"></i>');
+    head.setAttribute('role', 'button'); head.tabIndex = 0;
+    const set = on => { g.classList.toggle('collapsed', on); head.setAttribute('aria-expanded', String(!on)); };
+    set(!!collapsed[key]);
+    const toggle = () => {
+      set(!g.classList.contains('collapsed'));
+      collapsed[key] = g.classList.contains('collapsed');
+      lsSet(LS_COLLAPSED, JSON.stringify(collapsed));
+    };
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
   });
 
   // Logo
@@ -904,6 +930,7 @@ function render() {
 // If the rubric or text box is too tall for its spot, tighten the spacing
 // between items first, then shrink the text a little until it fits.
 function fitBoxText() {
+  $('pages').style.zoom = 1; // measure at true size; fitPreview() sets the zoom again
   document.querySelectorAll('#pages .rubric-list, #pages .custom-body').forEach(el => {
     const over = () => el.scrollHeight > el.clientHeight + 1;
     const baseGap = el.classList.contains('rubric-list') ? 0.94 : 0.6;

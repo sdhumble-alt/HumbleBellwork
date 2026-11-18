@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Humble Bellwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e2a3a'/%3E%3Crect x='7' y='6' width='18' height='20' rx='2' fill='%23fff'/%3E%3Cline x1='10' y1='12' x2='22' y2='12' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Cline x1='10' y1='16' x2='22' y2='16' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Cline x1='10' y1='20' x2='17' y2='20' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Ccircle cx='22' cy='22' r='5' fill='%233266ad' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" id="gfonts">
+<style>
+/* ════════════════════════════════════════════════
+   DESIGN TOKENS
+   ════════════════════════════════════════════════ */
+:root {
+  --header-bg: #1e2a3a;
+  --header-border: #12202e;
+  --header-title: #ffffff;
+  --header-sub: rgba(255, 255, 255, 0.65);
+  --header-ver: rgba(255, 255, 255, 0.45);
+
+  --app-window-bg: #f0f2f5;
+  --app-panel-bg: #ffffff;
+  --stage-bg: #e9edf2;
+
+  --card-border: #cbd5e1;
+  --card-header-bg: #f8fafc;
+  --card-header-border: #e2e8f0;
+  --card-header-title: #475569;
+  --card-header-icon: #64748b;
+
+  --input-border: #cbd5e1;
+  --input-border-hover: #94a3b8;
+  --input-border-focus: #3266ad;
+  --input-focus-ring: rgba(50, 102, 173, 0.15);
+  --input-text: #1e2a3a;
+  --input-label: #475569;
+
+  --btn-primary-bg: #3266ad;
+  --btn-primary-hover: #185fa5;
+  --btn-secondary-border: #cbd5e1;
+  --btn-green-bg: #1a7a3a;
+  --btn-green-hover: #145e2c;
+  --btn-danger-bg: #b00020;
+
+  --sidebar-min-width: 340px;
+  --sidebar-max-width: 390px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-size: 11pt; background: var(--app-window-bg); color: var(--input-text);
+  height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+}
+#app { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; background: var(--app-panel-bg); }
+
+#app-header {
+  background: var(--header-bg); padding: 10px 16px; display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0; border-bottom: 1px solid var(--header-border); gap: 10px;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-icon { height: 34px; width: 34px; display: block; border: 1.5px solid #fff; border-radius: 8px; padding: 1px; }
+.header-titles { display: flex; flex-direction: column; gap: 2px; }
+#app-title { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: bold; color: var(--header-title); line-height: 1.2; }
+#app-subtitle { font-size: 10px; color: var(--header-sub); font-style: italic; white-space: nowrap; line-height: 1.2; }
+.toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.toolbar-ver { font-size: 8pt; color: var(--header-ver); font-family: Arial, sans-serif; white-space: nowrap; margin-left: 6px; }
+.hdr-btn {
+  background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+  padding: 4px 9px; font-size: 8.5pt; font-family: Arial, sans-serif; font-weight: 600;
+  border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all .12s;
+}
+.hdr-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
+.hdr-btn.primary { background: var(--btn-primary-bg); border-color: var(--btn-primary-bg); }
+.hdr-btn.primary:hover { background: var(--btn-primary-hover); }
+.hdr-btn i { font-size: 13px; }
+
+.content { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+.split-layout {
+  display: grid; grid-template-columns: minmax(var(--sidebar-min-width), var(--sidebar-max-width)) 1fr;
+  gap: 18px; height: 100%; width: 100%; overflow: hidden; padding: 16px;
+}
+.split-left { height: 100%; overflow-y: auto; padding-right: 6px; }
+.split-right {
+  height: 100%; overflow: auto; background: var(--stage-bg); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 18px; display: flex; flex-direction: column; align-items: center;
+}
+
+.opt-group { border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 14px; overflow: hidden; background: #fff; }
+.opt-group-header { background: var(--card-header-bg); padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--card-header-border); }
+.opt-group-header-left { display: flex; align-items: center; gap: 6px; }
+.opt-group-header i { font-size: 14px; color: var(--card-header-icon); }
+.opt-group-title { font-size: 8.5pt; font-weight: 700; color: var(--card-header-title); text-transform: uppercase; letter-spacing: .05em; }
+.opt-group-body { padding: 12px; }
+
+input[type=text], input[type=number], input[type=date], select, textarea {
+  border: 1.5px solid var(--input-border); border-radius: 6px; padding: 6px 9px;
+  font-size: 10pt; font-family: Arial, sans-serif; background: #fff; color: var(--input-text);
+  outline: none; transition: border-color .15s, box-shadow .15s; min-width: 0; width: 100%;
+}
+textarea { resize: vertical; line-height: 1.35; font-size: 9pt; }
+input:hover, select:hover, textarea:hover { border-color: var(--input-border-hover); }
+input:focus, select:focus, textarea:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 3px var(--input-focus-ring); }
+input[type=range] { width: 100%; accent-color: var(--btn-primary-bg); }
+.field-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.field-row:last-child { margin-bottom: 0; }
+.field-row > label, .lbl { font-size: 9.5pt; color: var(--input-label); font-weight: 600; }
+.hint { font-size: 8.5pt; color: #64748b; line-height: 1.35; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.toggle-row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.toggle-row label { font-size: 10pt; cursor: pointer; user-select: none; }
+input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: var(--btn-primary-bg); }
+
+/* Segmented control */
+.seg { display: flex; border: 1.5px solid var(--card-border); border-radius: 6px; overflow: hidden; }
+.seg button {
+  flex: 1; border: none; background: #fff; padding: 6px 4px; font-size: 8.5pt; font-family: Arial, sans-serif;
+  font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+  border-right: 1px solid var(--card-border); transition: background .12s;
+}
+.seg button:last-child { border-right: none; }
+.seg button:hover { background: #f1f5f9; }
+.seg button.selected { background: #eef3fb; color: #1e429f; box-shadow: inset 0 -2px 0 var(--btn-primary-bg); }
+.seg button i { font-size: 15px; }
+.seg button:disabled { color: #b6c0cc; cursor: not-allowed; background: #f8fafc; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 6px;
+  padding: 6px 10px; font-size: 9pt; font-family: Arial, sans-serif; font-weight: 600; cursor: pointer;
+  transition: all .12s; border: none; white-space: nowrap;
+}
+.btn-secondary { background: #fff; color: #334155; border: 1.5px solid var(--btn-secondary-border); }
+.btn-secondary:hover { background: #f1f5f9; border-color: #94a3b8; }
+.btn-danger-lite { background: #fff; color: var(--btn-danger-bg); border: 1.5px solid #f0c0c8; }
+.btn-danger-lite:hover { background: #fdf2f2; border-color: var(--btn-danger-bg); }
+.btn i { font-size: 14px; }
+
+/* Week nav */
+.week-nav { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; }
+.week-top { display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 8px; align-items: end; }
+.week-top .field-row { margin-bottom: 0; }
+.week-num input[type=number] { text-align: center; }
+.wk-lbl { display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
+.range-pill { font-size: 9pt; color: #1e429f; background: #e8f0fe; border: 1px solid #c2dbfe; border-radius: 6px; padding: 5px 8px; margin-top: 6px; text-align: center; }
+
+/* Day table */
+.day-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+.day-table th { font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; color: #64748b; text-align: center; padding: 0 4px 6px; font-weight: 700; }
+.day-table th:first-child { text-align: left; }
+.day-table td { padding: 5px 4px; border-top: 1px solid #eef1f5; text-align: center; }
+.day-table td:first-child { text-align: left; font-weight: 600; }
+.day-table td .d { color: #64748b; font-weight: 400; margin-left: 4px; }
+.day-table tr.off td:first-child { color: #94a3b8; text-decoration: line-through; }
+
+/* Logo */
+.logo-row { display: flex; align-items: center; gap: 10px; }
+.logo-thumb {
+  width: 60px; height: 60px; border: 1.5px dashed var(--card-border); border-radius: 6px; display: flex;
+  align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; flex-shrink: 0;
+}
+.logo-thumb img { max-width: 100%; max-height: 100%; }
+.logo-thumb i { font-size: 22px; color: #94a3b8; }
+.logo-btns { display: flex; flex-direction: column; gap: 6px; }
+
+/* Preview */
+.preview-bar { display: flex; align-items: center; gap: 10px; font-size: 9pt; color: #475569; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+.preview-bar .badge { background: #fff; border: 1px solid var(--card-border); border-radius: 999px; padding: 3px 10px; font-weight: 600; }
+#pages { display: flex; flex-direction: column; gap: 22px; align-items: center; }
+.page-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.page-label { font-size: 8.5pt; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0;
+  background: #1e2a3a; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 10pt;
+  box-shadow: 0 6px 20px rgba(0,0,0,.2); transition: all .25s; pointer-events: none; z-index: 50; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Modal */
+.modal-back { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 60; padding: 16px; }
+.modal-back.show { display: flex; }
+.modal { background: #fff; border-radius: 10px; max-width: 420px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,.25); overflow: hidden; }
+.modal-h { background: var(--card-header-bg); border-bottom: 1px solid var(--card-header-border); padding: 10px 14px; font-weight: 700; font-size: 10.5pt; display: flex; gap: 6px; align-items: center; }
+.modal-b { padding: 14px; font-size: 10pt; line-height: 1.45; color: #334155; }
+.modal-b ol { padding-left: 20px; margin-top: 6px; }
+.modal-f { padding: 10px 14px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--card-header-border); }
+.btn-primary { background: var(--btn-primary-bg); color: #fff; }
+.btn-primary:hover { background: var(--btn-primary-hover); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 0.9s linear infinite; }
+
+@media (max-width: 820px) {
+  body { height: auto; overflow: auto; }
+  #app, .content { overflow: visible; }
+  .split-layout { grid-template-columns: minmax(0, 1fr); height: auto; overflow: visible; }
+  .split-left, .split-right { height: auto; overflow: visible; }
+  #app-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* ════════════════════════════════════════════════
+   PRINTABLE SHEET
+   ════════════════════════════════════════════════ */
+.page {
+  --ink: #000;
+  --hd-bg: #000; --hd-fg: #fff;
+  --rule: #9aa3ae;
+  --sp: 0.34in;
+  --stamp: 0.85in;
+  --fs: 1;
+  --nc-a: #e3e6ea; --nc-b: #f1f3f5;
+  width: 8.5in; height: 11in; background: #fff; color: var(--ink);
+  padding: 0.4in; display: flex; flex-direction: column; gap: 0.12in; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15); position: relative;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  font-size: calc(11pt * var(--fs));
+}
+.page.hd-outline { --hd-bg: #fff; --hd-fg: #000; }
+
+/* Sheet header */
+.sh { display: flex; align-items: stretch; gap: 0.12in; flex-shrink: 0; }
+.sh-title {
+  font-size: 0.95em !important; background: var(--hd-bg); color: var(--hd-fg); border: 2px solid #000; font-weight: 700;
+  font-size: 1.12em; line-height: 1.15; padding: 0.06in 0.12in; display: flex; align-items: center;
+  justify-content: center; text-align: center; width: 1.55in; flex-shrink: 0;
+}
+.sh-name { flex: 1; display: flex; align-items: center; font-size: 1.1em; white-space: nowrap; }
+.sh-name .nm { display: flex; align-items: baseline; gap: 0.08in; width: 100%; }
+.sh-name .blank { display: inline-block; border-bottom: 1.5px solid #000; flex: 1; height: 1em; }
+.sh-name .blank.per { flex: 0 0 0.5in; }
+.sh-week { border: 2px solid #000; display: flex; flex-direction: column; flex-shrink: 0; min-width: 0; }
+.sh-week .wo-top { background: var(--hd-bg); color: var(--hd-fg); font-weight: 700; text-align: center; padding: 0.03in 0.08in; font-size: 0.95em; }
+.page.hd-outline .sh-week .wo-top { border-bottom: 1.5px solid #000; }
+.sh-week .wo-bot { display: flex; flex: 1; font-size: 0.85em; }
+.sh-week .wo-bot span { display: flex; align-items: center; justify-content: center; }
+.sh-week .wo-bot span { flex: 1; text-align: center; padding: 0.03in 0.06in; white-space: nowrap; }
+.sh-week .wo-bot span + span { border-left: 1.5px solid #000; flex: 0 0 auto; font-weight: 700; }
+
+.sh.compact .sh-title { padding: 0.03in 0.08in; }
+.sh-name { min-width: 2.4in; }
+.sh.compact .sh-week { flex-direction: row; min-width: 0; }
+.sh.compact .sh-week .wo-top { display: flex; align-items: center; }
+.sh.compact .sh-week .wo-bot span { display: flex; align-items: center; }
+.page.hd-outline .sh.compact .sh-week .wo-top { border-bottom: none; border-right: 1.5px solid #000; }
+
+.reminder-top { text-align: center; font-style: italic; font-size: 0.9em; flex-shrink: 0; }
+
+/* Top stamp row */
+.stamp-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.1in; flex-shrink: 0; }
+.sc { border: 1.5px solid #000; display: flex; flex-direction: column; }
+.sc-label { background: var(--hd-bg); color: var(--hd-fg); font-weight: 700; font-style: italic; text-align: center; font-size: 0.85em; padding: 0.02in 0.04in; white-space: nowrap; overflow: hidden; }
+.page.hd-outline .sc-label { border-bottom: 1.5px solid #000; }
+.sc-box { height: var(--stamp); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.sc.off .sc-box { background: repeating-linear-gradient(45deg, var(--nc-a) 0 6px, var(--nc-b) 6px 12px); }
+.sc.off .sc-label { background: #8b929b; color: #fff; }
+.page.hd-outline .sc.off .sc-label { background: #e3e6ea; color: #555; }
+.nc-mini { font-size: 0.75em; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .04em; text-align: center; padding: 0 4px; }
+
+.reward-img { max-width: 86%; max-height: 86%; object-fit: contain; opacity: var(--logo-op, .6); }
+.reward-star { width: 60%; height: 60%; opacity: var(--logo-op, .6); }
+
+/* Day grid */
+.days { flex: 1; min-height: 0; display: grid; gap: 0.12in; grid-auto-flow: column; }
+.day { border: 2px solid #000; display: flex; min-height: 0; min-width: 0; position: relative; overflow: hidden; }
+.day.lbl-top { flex-direction: column; }
+.day-label {
+  background: var(--hd-bg); color: var(--hd-fg); font-weight: 700; font-style: italic; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 0.08in; white-space: nowrap;
+}
+.day.lbl-top .day-label { padding: 0.03in 0.1in; font-size: 1.12em; border-bottom: 2px solid #000; }
+.day.lbl-side .day-label { writing-mode: vertical-rl; transform: rotate(180deg); padding: 0.1in 0.04in; font-size: 1.12em; border-left: 2px solid #000; }
+.day-label .dt { font-weight: 400; font-style: normal; font-size: 0.82em; opacity: .9; }
+.day-body { flex: 1; position: relative; min-height: 0; min-width: 0; }
+
+.rule-lines { background-image: linear-gradient(to bottom, transparent calc(var(--sp) - 1px), var(--rule) calc(var(--sp) - 1px), var(--rule) var(--sp)); background-size: 100% var(--sp); background-position: 0 0; }
+.rule-grid { background-image: linear-gradient(to bottom, var(--rule) 1px, transparent 1px), linear-gradient(to right, var(--rule) 1px, transparent 1px); background-size: var(--sp) var(--sp); background-position: -1px -1px; }
+.rule-dots { background-image: radial-gradient(circle, var(--rule) 1.1px, transparent 1.5px); background-size: var(--sp) var(--sp); background-position: calc(var(--sp) / -2) calc(var(--sp) / -2); }
+.rule-blank { background: none; }
+
+.stamp-in {
+  position: absolute; top: 0.07in; right: 0.07in; width: var(--stamp); height: var(--stamp);
+  border: 1.5px dashed #000; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 2;
+}
+.reminder-in {
+  position: absolute; left: 0.08in; bottom: 0.05in; font-size: 0.72em; font-style: italic; color: #555;
+  background: #fff; padding: 0 0.05in; z-index: 2; max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.day.off .day-label { background: #8b929b; color: #fff; }
+.page.hd-outline .day.off .day-label { background: #e3e6ea; color: #555; }
+.day.off .day-body { background: repeating-linear-gradient(45deg, var(--nc-a) 0 8px, var(--nc-b) 8px 16px) !important; }
+.stamp-in.at-bottom { top: auto; bottom: 0.07in; }
+.day.off .stamp-in { background: #dfe2e6; border-color: #9aa1aa; }
+.nc-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1;
+}
+.nc-text span { background: #fff; border: 1.5px solid #9aa1aa; color: #4b5260; font-weight: 700; font-size: 1.15em; padding: 0.05in 0.18in; border-radius: 4px; }
+
+/* Rubric */
+.rubric { border: 2px solid #000; display: flex; min-height: 0; overflow: hidden; flex-shrink: 0; }
+.rubric-label {
+  background: var(--hd-bg); color: var(--hd-fg); font-weight: 700; font-style: italic;
+  position: relative; flex: 0 0 auto; width: 3.5em; font-size: 0.9em; border-right: 2px solid #000;
+}
+.rubric-label span {
+  position: absolute; inset: 0; writing-mode: vertical-rl; transform: rotate(180deg);
+  display: flex; align-items: center; justify-content: center; padding: 0.06in 0.05in;
+}
+.rubric-label span b { display: block; max-inline-size: 100%; text-align: center; line-height: 1.15; overflow-wrap: break-word; font-weight: 700;
+}
+.rubric-list { list-style: none; padding: 0.08in 0.12in; display: flex; flex-direction: column; justify-content: center; gap: 0.94em; font-size: 0.8em; line-height: 1.25; }
+.rubric-list li { position: relative; padding-left: 0.2in; }
+.rubric-list li::before { content: ""; position: absolute; left: 0; top: 0.2em; width: 0.1in; height: 0.1in; border: 1.2px solid #000; }
+.rubric:not(.in-cell) { min-height: 1.6in; }
+.rubric:not(.in-cell) .rubric-label { font-size: 0.8em; }
+.rubric.in-cell .rubric-list { font-size: 0.78em; }
+.custom-body { flex: 1; min-width: 0; padding: 0.1in 0.16in; display: flex; flex-direction: column; justify-content: center; gap: 0.6em; font-size: 0.95em; line-height: 1.3; overflow: hidden; }
+
+@page { size: letter portrait; margin: 0; }
+@media print {
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  #app, .content, .split-layout, .split-right { display: block !important; overflow: visible !important; height: auto !important; padding: 0 !important; border: 0 !important; background: none !important; }
+  #app-header, .split-left, .page-label, .preview-bar, .toast, .modal-back { display: none !important; }
+  #pages { zoom: 1 !important; display: block !important; }
+  .page-wrap { display: block !important; }
+  .page { box-shadow: none !important; height: 10.98in; break-after: page; page-break-after: always; }
+  .page-wrap:last-child .page { break-after: auto; page-break-after: auto; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="app-header">
+    <div class="header-left">
+      <img class="header-icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231e2a3a'/%3E%3Crect x='7' y='6' width='18' height='20' rx='2' fill='%23fff'/%3E%3Cline x1='10' y1='12' x2='22' y2='12' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Cline x1='10' y1='16' x2='22' y2='16' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Cline x1='10' y1='20' x2='17' y2='20' stroke='%231e2a3a' stroke-width='1.5'/%3E%3Ccircle cx='22' cy='22' r='5' fill='%233266ad' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E">
+      <div class="header-titles">
+        <div id="app-title">A Humble Bellwork</div>
+        <div id="app-subtitle">Bellwork Recording Sheet Builder &mdash; Built by Steven Humble</div>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <button class="hdr-btn" onclick="resetSettings()" title="Restore default settings (keeps logo &amp; week number)"><i class="ti ti-restore"></i> Reset</button>
+      <button class="hdr-btn" onclick="savePdf()" title="Save as PDF"><i class="ti ti-file-type-pdf"></i> Save PDF</button>
+      <button class="hdr-btn primary" onclick="printSheet()" title="Print"><i class="ti ti-printer"></i> Print</button>
+      <div class="toolbar-ver">V 1.0.0 &mdash; 2026-11-18</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="split-layout">
+      <aside class="split-left">
+
+        <!-- WEEK -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-calendar-week"></i><span class="opt-group-title">Week</span></div></div>
+          <div class="opt-group-body">
+            <div class="week-top">
+              <div class="field-row">
+                <label for="monday">Monday of the week</label>
+                <div class="week-nav">
+                  <button class="btn btn-secondary" onclick="shiftWeek(-1)" title="Previous week (also lowers week #)"><i class="ti ti-chevron-left"></i></button>
+                  <input type="date" id="monday">
+                  <button class="btn btn-secondary" onclick="shiftWeek(1)" title="Next week (also raises week #)"><i class="ti ti-chevron-right"></i></button>
+                </div>
+              </div>
+              <div class="field-row week-num">
+                <label for="showWeek" class="wk-lbl"><input type="checkbox" id="showWeek"> Week #</label>
+                <input type="number" id="weekNum" min="0" max="99" aria-label="Week number">
+              </div>
+            </div>
+            <div class="range-pill" id="rangePill"></div>
+          </div>
+        </div>
+
+        <!-- DAYS -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-calendar-off"></i><span class="opt-group-title">Days</span></div></div>
+          <div class="opt-group-body">
+            <table class="day-table">
+              <thead><tr><th>Day</th><th title="Grey out this day">No Class</th><th title="Show your logo in this day's stamp box">Reward</th></tr></thead>
+              <tbody id="dayRows"></tbody>
+            </table>
+            <div class="field-row" style="margin-top:10px">
+              <label for="noClassText">No class label</label>
+              <input type="text" id="noClassText">
+            </div>
+            <div class="hint" id="rewardHint"></div>
+          </div>
+        </div>
+
+        <!-- LAYOUT -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-layout-grid"></i><span class="opt-group-title">Layout</span></div></div>
+          <div class="opt-group-body">
+            <div class="grid-2">
+              <div class="field-row"><span class="lbl">Columns</span>
+                <div class="seg" data-key="cols"><button data-v="1"><i class="ti ti-layout-rows"></i> 1</button><button data-v="2"><i class="ti ti-layout-columns"></i> 2</button></div>
+              </div>
+              <div class="field-row"><span class="lbl">Pages</span>
+                <div class="seg" data-key="pages"><button data-v="1"><i class="ti ti-file"></i> 1</button><button data-v="2" id="pagesTwo"><i class="ti ti-files"></i> 2</button></div>
+              </div>
+            </div>
+            <div class="field-row"><span class="lbl">Day label</span>
+              <div class="seg" data-key="labelStyle"><button data-v="side">Side</button><button data-v="top">Top banner</button></div>
+            </div>
+            <div class="grid-2">
+              <div class="field-row"><label for="ruling">Writing area</label>
+                <select id="ruling"><option value="lines">Lined</option><option value="grid">Grid</option><option value="dots">Dot grid</option><option value="blank">Blank</option></select>
+              </div>
+              <div class="field-row"><label for="spacing">Spacing</label>
+                <select id="spacing"><option value="0.4">Extra wide</option><option value="0.34">Wide</option><option value="0.28">College</option><option value="0.25">¼ inch</option><option value="0.2">Small</option></select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field-row"><label for="ruleColor">Line darkness</label>
+                <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option></select>
+              </div>
+              <div class="field-row"><label for="filler">Empty space</label>
+                <select id="filler"><option value="notes">Notes box</option><option value="custom">Text box (type your own)</option><option value="blank">Leave blank</option></select>
+              </div>
+            </div>
+            <div id="customRow" style="display:none">
+              <div class="field-row"><label for="customTitle">Text box label</label><input type="text" id="customTitle"></div>
+              <div class="field-row"><label for="customText">Text box text</label><textarea id="customText" rows="4"></textarea>
+                <div class="hint">Fills open space on the sheet. Turn off the rubric to free up a spot if there is none. Use **double stars** for bold or __double underscores__ for underline.</div>
+              </div>
+            </div>
+            <div class="toggle-row"><input type="checkbox" id="showDates"><label for="showDates">Show dates on each day</label></div>
+          </div>
+        </div>
+
+        <!-- STAMPS -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-stamp"></i><span class="opt-group-title">Stamp Boxes</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row">
+              <div class="seg" data-key="stampMode"><button data-v="top"><i class="ti ti-layout-navbar"></i> At top</button><button data-v="box"><i class="ti ti-box-align-top-right"></i> In boxes</button><button data-v="none"><i class="ti ti-ban"></i> None</button></div>
+            </div>
+            <div class="field-row" id="stampPosRow"><span class="lbl">Position in day box</span>
+              <div class="seg" data-key="stampPos"><button data-v="top"><i class="ti ti-arrow-bar-to-up"></i> Top corner</button><button data-v="bottom"><i class="ti ti-arrow-bar-to-down"></i> Bottom corner</button></div>
+            </div>
+            <div class="field-row" id="stampSizeRow">
+              <label for="stampSize">Stamp box size: <span id="stampSizeVal"></span></label>
+              <input type="range" id="stampSize" min="0.5" max="1.4" step="0.05">
+            </div>
+            <div class="field-row">
+              <span class="lbl">Reward logo</span>
+              <div class="logo-row">
+                <div class="logo-thumb" id="logoThumb"><i class="ti ti-photo"></i></div>
+                <div class="logo-btns">
+                  <button class="btn btn-secondary" onclick="document.getElementById('logoFile').click()"><i class="ti ti-upload"></i> Upload logo</button>
+                  <button class="btn btn-danger-lite" id="logoRemove" onclick="removeLogo()"><i class="ti ti-trash"></i> Remove</button>
+                </div>
+              </div>
+              <input type="file" id="logoFile" accept="image/*" style="display:none">
+              <div class="hint">Saved on this computer. Tick <b>Reward</b> on a day to put the logo in its stamp box. With no logo, a star is used.</div>
+            </div>
+            <div class="field-row">
+              <label for="logoOp">Logo strength: <span id="logoOpVal"></span></label>
+              <input type="range" id="logoOp" min="0.15" max="1" step="0.05">
+            </div>
+          </div>
+        </div>
+
+        <!-- TEXT -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-typography"></i><span class="opt-group-title">Text &amp; Font</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row"><label for="title">Sheet title</label><input type="text" id="title"></div>
+            <div class="toggle-row"><input type="checkbox" id="showPeriod"><label for="showPeriod">Include “Per.” blank</label></div>
+            <div class="grid-2">
+              <div class="field-row"><label for="font">Font</label><select id="font"></select></div>
+              <div class="field-row"><label for="fontScale">Text size</label>
+                <select id="fontScale"><option value="0.9">Small</option><option value="1">Normal</option><option value="1.12">Large</option></select>
+              </div>
+            </div>
+            <div class="field-row"><span class="lbl">Header style</span>
+              <div class="seg" data-key="headerStyle"><button data-v="solid"><i class="ti ti-square-filled"></i> Solid black</button><button data-v="outline"><i class="ti ti-square"></i> Outline (saves ink)</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABSENCE -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-user-off"></i><span class="opt-group-title">Absence Reminder</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row">
+              <div class="seg" data-key="reminderMode"><button data-v="top">Top of page</button><button data-v="box">In each day</button><button data-v="none">Hidden</button></div>
+            </div>
+            <div class="field-row"><label for="reminderText">Reminder text</label><input type="text" id="reminderText"></div>
+          </div>
+        </div>
+
+        <!-- RUBRIC -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-list-check"></i><span class="opt-group-title">Scoring Rubric</span></div></div>
+          <div class="opt-group-body">
+            <div class="toggle-row"><input type="checkbox" id="rubricOn"><label for="rubricOn">Show rubric on the last page</label></div>
+            <div class="field-row"><label for="rubricTitle">Rubric label</label><input type="text" id="rubricTitle"></div>
+            <div class="field-row"><label for="rubricText">Rubric items (one per line)</label><textarea id="rubricText" rows="7"></textarea>
+              <div class="hint">Wrap text in **double stars** for bold or __double underscores__ for underline.</div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <section class="split-right">
+        <div class="preview-bar"><span class="badge" id="summaryBadge"></span><span>Letter size, portrait</span></div>
+        <div id="pages"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-back" id="busy">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-b" style="display:flex;align-items:center;gap:10px"><i class="ti ti-loader-2 spin" style="font-size:20px;color:#3266ad"></i> <span id="busyMsg">Building PDF…</span></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONSTANTS & STATE
+   ════════════════════════════════════════════════ */
+const LS_SETTINGS = 'humbleBellwork.settings.v1';
+const LS_LOGO = 'humbleBellwork.logo.v1';
+
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+// Alphabetical. Fonts with a "g" value load from Google Fonts.
+const FONTS = [
+  { name: 'Andika', g: 'Andika:ital,wght@0,400;0,700;1,400;1,700', css: "'Andika', sans-serif" },
+  { name: 'Arial', css: "Arial, Helvetica, sans-serif" },
+  { name: 'Atkinson Hyperlegible', g: 'Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700', css: "'Atkinson Hyperlegible', sans-serif" },
+  { name: 'Baloo 2', g: 'Baloo+2:wght@400;700', css: "'Baloo 2', cursive" },
+  { name: 'Bubblegum Sans', g: 'Bubblegum+Sans', css: "'Bubblegum Sans', cursive" },
+  { name: 'Caveat', g: 'Caveat:wght@400;700', css: "'Caveat', cursive" },
+  { name: 'Chewy', g: 'Chewy', css: "'Chewy', cursive" },
+  { name: 'Comic Neue', g: 'Comic+Neue:ital,wght@0,400;0,700;1,400;1,700', css: "'Comic Neue', 'Comic Sans MS', sans-serif" },
+  { name: 'Delius', g: 'Delius', css: "'Delius', cursive" },
+  { name: 'Fredoka', g: 'Fredoka:wght@400;700', css: "'Fredoka', sans-serif" },
+  { name: 'Gaegu', g: 'Gaegu:wght@400;700', css: "'Gaegu', cursive" },
+  { name: 'Georgia', css: "Georgia, serif" },
+  { name: 'Gochi Hand', g: 'Gochi+Hand', css: "'Gochi Hand', cursive" },
+  { name: 'Indie Flower', g: 'Indie+Flower', css: "'Indie Flower', cursive" },
+  { name: 'Itim', g: 'Itim', css: "'Itim', cursive" },
+  { name: 'Kalam', g: 'Kalam:wght@400;700', css: "'Kalam', cursive" },
+  { name: 'Lato', g: 'Lato:ital,wght@0,400;0,700;1,400;1,700', css: "'Lato', sans-serif" },
+  { name: 'Lexend', g: 'Lexend:wght@400;700', css: "'Lexend', sans-serif" },
+  { name: 'Luckiest Guy', g: 'Luckiest+Guy', css: "'Luckiest Guy', cursive" },
+  { name: 'Mali', g: 'Mali:ital,wght@0,400;0,700;1,400;1,700', css: "'Mali', cursive" },
+  { name: 'Merriweather', g: 'Merriweather:ital,wght@0,400;0,700;1,400;1,700', css: "'Merriweather', Georgia, serif" },
+  { name: 'Montserrat', g: 'Montserrat:ital,wght@0,400;0,700;1,400;1,700', css: "'Montserrat', sans-serif" },
+  { name: 'Nunito', g: 'Nunito:ital,wght@0,400;0,700;1,400;1,700', css: "'Nunito', sans-serif" },
+  { name: 'Open Sans', g: 'Open+Sans:ital,wght@0,400;0,700;1,400;1,700', css: "'Open Sans', sans-serif" },
+  { name: 'Oswald', g: 'Oswald:wght@400;700', css: "'Oswald', 'Arial Narrow', sans-serif" },
+  { name: 'Patrick Hand', g: 'Patrick+Hand', css: "'Patrick Hand', cursive" },
+  { name: 'Playpen Sans', g: 'Playpen+Sans:wght@400;700', css: "'Playpen Sans', cursive" },
+  { name: 'Poppins', g: 'Poppins:ital,wght@0,400;0,700;1,400;1,700', css: "'Poppins', sans-serif" },
+  { name: 'Quicksand', g: 'Quicksand:wght@400;700', css: "'Quicksand', sans-serif" },
+  { name: 'Roboto Condensed', g: 'Roboto+Condensed:ital,wght@0,400;0,700;1,400;1,700', css: "'Roboto Condensed', 'Arial Narrow', Arial, sans-serif" },
+  { name: 'Schoolbell', g: 'Schoolbell', css: "'Schoolbell', cursive" },
+  { name: 'Shantell Sans', g: 'Shantell+Sans:ital,wght@0,400;0,700;1,400;1,700', css: "'Shantell Sans', cursive" },
+  { name: 'Short Stack', g: 'Short+Stack', css: "'Short Stack', cursive" },
+  { name: 'Sniglet', g: 'Sniglet:wght@400;800', css: "'Sniglet', cursive" },
+  { name: 'Times New Roman', css: "'Times New Roman', Times, serif" },
+  { name: 'Verdana', css: "Verdana, Geneva, sans-serif" },
+];
+
+const DEFAULTS = {
+  v: 2,
+  title: 'Daily Bellwork Recording Sheet',
+  showPeriod: true,
+  cols: 2,
+  pages: 1,
+  labelStyle: 'side',
+  ruling: 'lines',
+  spacing: '0.34',
+  ruleColor: '#9aa3ae',
+  filler: 'notes',
+  customTitle: 'Reminders',
+  customText: 'Bellwork starts when the bell rings.\nWrite in complete sentences.\nKeep this sheet in your folder all week.',
+  showDates: true,
+  stampMode: 'box',
+  stampPos: 'top',
+  stampSize: 0.85,
+  logoOp: 0.6,
+  rewardDays: [false, false, false, false, false],
+  noClassText: 'No Class',
+  font: 'Arial',
+  fontScale: '1',
+  headerStyle: 'solid',
+  reminderMode: 'top',
+  reminderText: 'Remember to write ‘Absent’ if you are absent!',
+  showWeek: false,
+  weekNum: 1,
+  rubricOn: true,
+  rubricTitle: 'Scoring for Thoughtful Engagement',
+  rubricText: [
+    '**Consistent & Thoughtful** (100%) You did Bellwork __every day__, and your answers show __you were thinking about the question__. You explained, gave examples, and/or made connections to what you know.',
+    '**Mostly Engaged** (75%) You did Bellwork __most days__ and/or you did it every day but sometimes gave __short, surface answers__ with little detail or thought.',
+    '**Inconsistent** (50%) You only did Bellwork about half the days and/or your answers were often too short, off-topic, or didn’t show much thinking.',
+    '**No Engagement** (0%) You rarely did Bellwork, or your answers were missing, copied from someone else, or completely off-topic.'
+  ].join('\n'),
+  noClass: { week: '', days: [false, false, false, false, false] },
+};
+
+let S = loadSettings();
+let LOGO = lsGet(LS_LOGO) || '';
+let monday = defaultMonday();
+
+/* ════════════════════════════════════════════════
+   STORAGE
+   ════════════════════════════════════════════════ */
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+function loadSettings() {
+  const base = JSON.parse(JSON.stringify(DEFAULTS));
+  try {
+    const raw = lsGet(LS_SETTINGS);
+    const saved = raw ? JSON.parse(raw) : null;
+    if (saved) Object.assign(base, saved);
+    if (base.filler === 'extend') base.filler = 'notes';
+    if (base.cols === 2) base.pages = 1;
+    // Older versions ticked Friday's reward by default; clear that once.
+    if (saved && !(saved.v >= 2)) { base.rewardDays = [false, false, false, false, false]; base.v = 2; }
+  } catch (e) {}
+  return base;
+}
+function saveSettings() { lsSet(LS_SETTINGS, JSON.stringify(S)); }
+
+/* ════════════════════════════════════════════════
+   DATES
+   ════════════════════════════════════════════════ */
+function defaultMonday() {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const dow = t.getDay(); // 0 Sun .. 6 Sat
+  const add = dow === 1 ? 0 : ((8 - dow) % 7 || 7);
+  t.setDate(t.getDate() + add);
+  return t;
+}
+function toISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function fromISO(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function md(d) { return `${d.getMonth() + 1}/${d.getDate()}`; }
+function snapToMonday(d) {
+  const dow = d.getDay();
+  if (dow === 1) return d;
+  if (dow === 0) return addDays(d, 1);      // Sunday → next Monday
+  if (dow === 6) return addDays(d, 2);      // Saturday → next Monday
+  return addDays(d, 1 - dow);               // Tue–Fri → that week's Monday
+}
+function weekDates() { return DAY_NAMES.map((_, i) => addDays(monday, i)); }
+function noClassDays() {
+  return (S.noClass && S.noClass.week === toISO(monday)) ? S.noClass.days : [false, false, false, false, false];
+}
+
+/* ════════════════════════════════════════════════
+   UI BINDING
+   ════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+
+function initUI() {
+  $('font').innerHTML = FONTS.map(f => `<option value="${f.name}" style="font-family:${f.css.replace(/"/g, '')}">${f.name}</option>`).join('');
+
+  // Simple fields
+  const simple = ['title', 'noClassText', 'reminderText', 'rubricTitle', 'rubricText', 'customTitle', 'customText', 'ruling', 'spacing', 'ruleColor', 'filler', 'font', 'fontScale'];
+  simple.forEach(k => {
+    const el = $(k); el.value = S[k];
+    el.addEventListener('input', () => { S[k] = el.value; commit(); });
+  });
+  ['showPeriod', 'showDates', 'showWeek', 'rubricOn'].forEach(k => {
+    const el = $(k); el.checked = !!S[k];
+    el.addEventListener('change', () => { S[k] = el.checked; commit(); });
+  });
+  $('stampSize').value = S.stampSize;
+  $('stampSize').addEventListener('input', e => { S.stampSize = +e.target.value; commit(); });
+  $('logoOp').value = S.logoOp;
+  $('logoOp').addEventListener('input', e => { S.logoOp = +e.target.value; commit(); });
+  $('weekNum').value = S.weekNum;
+  $('weekNum').addEventListener('input', e => { const v = parseInt(e.target.value, 10); S.weekNum = isNaN(v) ? 0 : v; commit(); });
+
+  // Segmented controls
+  document.querySelectorAll('.seg').forEach(seg => {
+    const key = seg.dataset.key;
+    seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const v = b.dataset.v; S[key] = /^\d+$/.test(v) ? +v : v;
+      if (S.cols === 2) S.pages = 1; // two columns are single-page only
+      commit();
+    }));
+  });
+
+  // Monday
+  $('monday').value = toISO(monday);
+  $('monday').addEventListener('change', e => {
+    if (!e.target.value) { $('monday').value = toISO(monday); return; }
+    const picked = fromISO(e.target.value);
+    const snapped = snapToMonday(picked);
+    if (snapped.getTime() !== picked.getTime()) toast(`Moved to Monday, ${md(snapped)}`);
+    monday = snapped; $('monday').value = toISO(monday); commit();
+  });
+
+  // Logo
+  $('logoFile').addEventListener('change', handleLogo);
+
+  // Fit preview on resize
+  new ResizeObserver(fitPreview).observe(document.querySelector('.split-right'));
+}
+
+function syncUI() {
+  document.querySelectorAll('.seg').forEach(seg => {
+    const cur = String(S[seg.dataset.key]);
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('selected', b.dataset.v === cur));
+  });
+  $('stampSizeVal').textContent = `${(+S.stampSize).toFixed(2)} in`;
+  $('logoOpVal').textContent = `${Math.round(S.logoOp * 100)}%`;
+  $('stampSizeRow').style.display = S.stampMode === 'none' ? 'none' : '';
+  $('stampPosRow').style.display = S.stampMode === 'box' ? '' : 'none';
+  $('weekNum').disabled = !S.showWeek;
+  $('reminderText').disabled = S.reminderMode === 'none';
+  $('rubricTitle').disabled = $('rubricText').disabled = !S.rubricOn;
+
+  const dates = weekDates();
+  $('rangePill').textContent = `${DAY_NAMES[0]} ${md(dates[0])}  to  ${DAY_NAMES[4]} ${md(dates[4])}`;
+
+  // Day rows
+  const nc = noClassDays();
+  $('dayRows').innerHTML = DAY_NAMES.map((n, i) => `
+    <tr class="${nc[i] ? 'off' : ''}">
+      <td>${n}<span class="d">${md(dates[i])}</span></td>
+      <td><input type="checkbox" ${nc[i] ? 'checked' : ''} onchange="toggleNoClass(${i}, this.checked)" aria-label="${n} no class"></td>
+      <td><input type="checkbox" ${S.rewardDays[i] ? 'checked' : ''} ${S.stampMode === 'none' || nc[i] ? 'disabled' : ''} onchange="toggleReward(${i}, this.checked)" aria-label="${n} reward"></td>
+    </tr>`).join('');
+  $('rewardHint').textContent = S.stampMode === 'none' ? 'Reward days need stamp boxes turned on.' : 'No Class days are reset when you change weeks.';
+
+  // Logo thumb
+  $('logoThumb').innerHTML = LOGO ? `<img src="${LOGO}" alt="Logo">` : '<i class="ti ti-photo"></i>';
+  $('logoRemove').disabled = !LOGO;
+  $('logoRemove').style.opacity = LOGO ? 1 : .45;
+
+  $('customRow').style.display = S.filler === 'custom' ? '' : 'none';
+  $('pagesTwo').disabled = S.cols === 2;
+  $('pagesTwo').title = S.cols === 2 ? 'Two columns always fit on one page' : '';
+  $('summaryBadge').textContent = `${S.pages} page${S.pages > 1 ? 's' : ''} · ${S.cols} column${S.cols > 1 ? 's' : ''}`;
+}
+
+function toggleNoClass(i, on) {
+  const days = noClassDays().slice(); days[i] = on;
+  S.noClass = { week: toISO(monday), days }; commit();
+}
+function toggleReward(i, on) { S.rewardDays = S.rewardDays.slice(); S.rewardDays[i] = on; commit(); }
+
+function shiftWeek(dir) {
+  monday = addDays(monday, 7 * dir); $('monday').value = toISO(monday);
+  S.weekNum = Math.max(0, (S.weekNum || 0) + dir); $('weekNum').value = S.weekNum;
+  commit();
+}
+
+function commit() { saveSettings(); syncUI(); render(); }
+
+function resetSettings() {
+  if (!confirm('Reset all settings to defaults? Your logo and week number are kept.')) return;
+  const keepWeek = S.weekNum;
+  S = JSON.parse(JSON.stringify(DEFAULTS)); S.weekNum = keepWeek;
+  ['title', 'noClassText', 'reminderText', 'rubricTitle', 'rubricText', 'customTitle', 'customText', 'ruling', 'spacing', 'ruleColor', 'filler', 'font', 'fontScale'].forEach(k => $(k).value = S[k]);
+  ['showPeriod', 'showDates', 'showWeek', 'rubricOn'].forEach(k => $(k).checked = S[k]);
+  $('stampSize').value = S.stampSize; $('logoOp').value = S.logoOp; $('weekNum').value = S.weekNum;
+  commit(); toast('Settings reset');
+}
+
+/* ════════════════════════════════════════════════
+   LOGO
+   ════════════════════════════════════════════════ */
+function handleLogo(e) {
+  const file = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 400, scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * scale)); c.height = Math.max(1, Math.round(img.height * scale));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      LOGO = c.toDataURL('image/png');
+      if (!lsSet(LS_LOGO, LOGO)) toast('Logo is used now, but could not be saved for next time');
+      else toast('Logo saved');
+      commit();
+    };
+    img.onerror = () => toast('That file could not be read as an image');
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo() { LOGO = ''; lsDel(LS_LOGO); commit(); toast('Logo removed'); }
+
+/* ════════════════════════════════════════════════
+   SHEET RENDERING
+   ════════════════════════════════════════════════ */
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function richText(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/__(.+?)__/g, '<u>$1</u>'); }
+
+const STAR_SVG = '<svg class="reward-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+function rewardMark() { return LOGO ? `<img class="reward-img" src="${LOGO}" alt="">` : STAR_SVG; }
+
+function headerHTML(dates, compact) {
+  const range = `${md(dates[0])} to ${md(dates[4])}`;
+  const week = S.showWeek ? `<span>Week ${esc(S.weekNum)}</span>` : '';
+  return `<div class="sh ${compact ? 'compact' : ''}">
+    <div class="sh-title">${esc(S.title)}</div>
+    <div class="sh-name"><span class="nm">Name <span class="blank"></span>${S.showPeriod ? 'Per. <span class="blank per"></span>' : ''}</span></div>
+    <div class="sh-week"><div class="wo-top">Week Of</div><div class="wo-bot"><span>${range}</span>${week}</div></div>
+  </div>`;
+}
+
+function stampRowHTML(dates, nc) {
+  return `<div class="stamp-row">${DAY_NAMES.map((n, i) => {
+    const off = nc[i];
+    const inner = off ? `<div class="nc-mini">${esc(S.noClassText)}</div>` : (S.rewardDays[i] ? rewardMark() : '');
+    return `<div class="sc ${off ? 'off' : ''}"><div class="sc-label">${n}${S.showDates ? ' ' + md(dates[i]) : ''}</div><div class="sc-box">${inner}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function dayHTML(i, dates, nc, span) {
+  const off = nc[i];
+  const stamp = S.stampMode === 'box'
+    ? `<div class="stamp-in ${S.stampPos === 'bottom' ? 'at-bottom' : ''}">${!off && S.rewardDays[i] ? rewardMark() : ''}</div>` : '';
+  const rem = (!off && S.reminderMode === 'box' && S.reminderText.trim()) ? `<div class="reminder-in">${esc(S.reminderText)}</div>` : '';
+  const nct = off ? `<div class="nc-text"><span>${esc(S.noClassText)}</span></div>` : '';
+  const date = S.showDates ? `<span class="dt">${md(dates[i])}</span>` : '';
+  return `<div class="day lbl-${S.labelStyle} ${off ? 'off' : ''}" ${span > 1 ? `style="grid-row: span ${span}"` : ''}>
+    <div class="day-label">${DAY_NAMES[i]}${date}</div>
+    <div class="day-body rule-${S.ruling}">${stamp}${rem}${nct}</div>
+  </div>`;
+}
+
+function customHTML() {
+  const lines = S.customText.split('\n').map(l => l.trim()).filter(Boolean);
+  return `<div class="rubric in-cell custom-box">
+    <div class="rubric-label"><span><b>${esc(S.customTitle)}</b></span></div>
+    <div class="custom-body">${lines.map(l => `<p>${richText(l)}</p>`).join('')}</div>
+  </div>`;
+}
+function notesHTML() {
+  return `<div class="day lbl-${S.labelStyle}"><div class="day-label">Notes</div><div class="day-body rule-${S.ruling}"></div></div>`;
+}
+
+function rubricHTML(inCell, span) {
+  const items = S.rubricText.split('\n').map(l => l.trim()).filter(Boolean);
+  return `<div class="rubric ${inCell ? 'in-cell' : ''}" ${span > 1 ? `style="grid-row: span ${span}"` : ''}>
+    <div class="rubric-label"><span><b>${esc(S.rubricTitle)}</b></span></div>
+    <ul class="rubric-list">${items.map(l => `<li>${richText(l)}</li>`).join('')}</ul>
+  </div>`;
+}
+
+function render() {
+  const dates = weekDates();
+  const nc = noClassDays();
+  const font = (FONTS.find(f => f.name === S.font) || FONTS[0]).css;
+  const groups = S.pages === 1 ? [[0, 1, 2, 3, 4]] : [[0, 1, 2], [3, 4]];
+
+  const cols = S.cols;
+  // Every page uses the same number of rows so all day boxes come out the same size.
+  const rows = Math.max(...groups.map(g => Math.ceil(g.length / cols)));
+
+  const html = groups.map((items, pi) => {
+    const isFirst = pi === 0, isLast = pi === groups.length - 1;
+    let empty = rows * cols - items.length;
+    const useRubricCell = S.rubricOn && isLast && empty > 0;
+
+    const cells = items.map(d => dayHTML(d, dates, nc, 1));
+    if (useRubricCell) {
+      // Rubric takes one open slot, the same size as a day box.
+      cells.push(rubricHTML(true, 1));
+      empty -= 1;
+    }
+    if (S.filler === 'notes') for (let k = 0; k < empty; k++) cells.push(notesHTML());
+    if (S.filler === 'custom') for (let k = 0; k < empty; k++) cells.push(customHTML());
+
+    let body = headerHTML(dates, !isFirst);
+    if (isFirst && S.stampMode === 'top') body += stampRowHTML(dates, nc);
+    if (isFirst && S.reminderMode === 'top' && S.reminderText.trim()) body += `<div class="reminder-top">${esc(S.reminderText)}</div>`;
+    body += `<div class="days" data-rows="${rows}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr)); grid-template-rows: repeat(${rows}, minmax(0, 1fr));">${cells.join('')}</div>`;
+    if (S.rubricOn && isLast && !useRubricCell) body += rubricHTML(false);
+
+    const style = `font-family:${font}; --fs:${S.fontScale}; --sp:${S.spacing}in; --rule:${S.ruleColor}; --stamp:${S.stampSize}in; --logo-op:${S.logoOp};`;
+    return `<div class="page-wrap">${groups.length > 1 ? `<div class="page-label">Page ${pi + 1}</div>` : ''}<div class="page ${S.headerStyle === 'outline' ? 'hd-outline' : ''}" style="${style.replace(/"/g, "'")}">${body}</div></div>`;
+  }).join('');
+
+  $('pages').innerHTML = html;
+  equalizeRows();
+  fitBoxText();
+  fitPreview();
+}
+
+// If the rubric or text box is too tall for its spot, tighten the spacing
+// between items first, then shrink the text a little until it fits.
+function fitBoxText() {
+  document.querySelectorAll('#pages .rubric-list, #pages .custom-body').forEach(el => {
+    const over = () => el.scrollHeight > el.clientHeight + 1;
+    const baseGap = el.classList.contains('rubric-list') ? 0.94 : 0.6;
+    for (let g = baseGap; over() && g > 0.15; g -= 0.08) el.style.gap = g.toFixed(2) + 'em';
+    const baseFs = parseFloat(getComputedStyle(el).fontSize);
+    for (let k = 0.95; over() && k >= 0.7; k -= 0.05) el.style.fontSize = (baseFs * k) + 'px';
+  });
+}
+
+// Pages have different amounts of header space, so measure each page's day area
+// and lock every page to the smallest row height. Any extra space stays as
+// margin at the bottom of the page.
+function equalizeRows() {
+  const grids = [...document.querySelectorAll('#pages .days')];
+  if (grids.length < 2) return;
+  const pages = $('pages');
+  const oldZoom = pages.style.zoom;
+  pages.style.zoom = 1;
+  const gap = parseFloat(getComputedStyle(grids[0]).rowGap) || 0;
+  const rows = +grids[0].dataset.rows;
+  const rowH = Math.min(...grids.map(g => (g.getBoundingClientRect().height - gap * (rows - 1)) / rows));
+  pages.style.zoom = oldZoom;
+  if (!(rowH > 0)) return;
+  const h = Math.floor(rowH * 100) / 100;
+  grids.forEach(g => {
+    g.style.gridTemplateRows = `repeat(${rows}, ${h}px)`;
+    g.style.alignContent = 'start';
+  });
+}
+
+function fitPreview() {
+  const stage = document.querySelector('.split-right');
+  const avail = stage.clientWidth - 40;
+  const z = Math.max(0.3, Math.min(1.1, avail / 816));
+  $('pages').style.zoom = z;
+}
+
+/* ════════════════════════════════════════════════
+   PRINT / PDF
+   ════════════════════════════════════════════════ */
+function fileTitle() {
+  const d = weekDates();
+  const wk = S.showWeek ? `Week ${S.weekNum} ` : '';
+  return `Bellwork ${wk}(${md(d[0]).replace('/', '-')} to ${md(d[4]).replace('/', '-')})`;
+}
+async function printSheet() {
+  try { await document.fonts.ready; } catch (e) {}
+  const old = document.title;
+  document.title = fileTitle();
+  window.print();
+  setTimeout(() => { document.title = old; }, 500);
+}
+// ── Save PDF: builds a real PDF file and opens a Save window ──
+const PDF_LIBS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js',
+];
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const el = document.createElement('script');
+    el.src = src; el.onload = res; el.onerror = () => rej(new Error('load'));
+    document.head.appendChild(el);
+  });
+}
+function setBusy(on, msg) {
+  if (msg) $('busyMsg').textContent = msg;
+  $('busy').classList.toggle('show', on);
+}
+// Inline the chosen Google font (Latin letters only) so the PDF uses it in every browser.
+async function buildFontCSS() {
+  const f = FONTS.find(x => x.name === S.font);
+  if (!f || !f.g) return '';
+  const css = await fetch(`https://fonts.googleapis.com/css2?family=${f.g}&display=swap`).then(r => r.text());
+  const blocks = css.split('/* ').filter(b => b.startsWith('latin */')).map(b => b.slice(b.indexOf('@font-face')));
+  const out = await Promise.all(blocks.map(async b => {
+    const m = b.match(/url\((https:[^)]+)\)/);
+    if (!m) return '';
+    const buf = await fetch(m[1]).then(r => r.blob());
+    const data = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(buf); });
+    return b.replace(m[1], data);
+  }));
+  return out.join('\n');
+}
+async function savePdf() {
+  const name = fileTitle() + '.pdf';
+  let handle = null;
+  // Ask where to save first (Chrome / Edge). Must happen right after the click.
+  if (window.showSaveFilePicker) {
+    try {
+      handle = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // user cancelled
+      handle = null;
+    }
+  }
+  setBusy(true, 'Building PDF…');
+  const pagesEl = $('pages');
+  const oldZoom = pagesEl.style.zoom;
+  try {
+    await Promise.all(PDF_LIBS.map(loadScript));
+    try { await document.fonts.ready; } catch (e) {}
+    pagesEl.style.zoom = 1;
+    const pageEls = [...pagesEl.querySelectorAll('.page')];
+    const pdf = new window.jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait', compress: true });
+    const fontCSS = await buildFontCSS().catch(() => '');
+    const opts = { pixelRatio: 3, backgroundColor: '#ffffff', width: 816, height: 1056, fontEmbedCSS: fontCSS, style: { boxShadow: 'none' } };
+    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+    for (let i = 0; i < pageEls.length; i++) {
+      setBusy(true, `Building PDF… page ${i + 1} of ${pageEls.length}`);
+      if (isSafari) await htmlToImage.toPng(pageEls[i], opts); // Safari needs a warm-up pass for images & fonts
+      const png = await htmlToImage.toPng(pageEls[i], opts);
+      if (i > 0) pdf.addPage('letter', 'portrait');
+      pdf.addImage(png, 'PNG', 0, 0, 8.5, 11, undefined, 'FAST');
+    }
+    pdf.setProperties({ title: fileTitle() });
+    const blob = pdf.output('blob');
+    pagesEl.style.zoom = oldZoom;
+    if (handle) {
+      const w = await handle.createWritable();
+      await w.write(blob); await w.close();
+      toast(`Saved ${handle.name}`);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast('PDF saved');
+    }
+  } catch (e) {
+    console.error(e);
+    toast('Could not build the PDF. Check your internet connection, or use Print → Save as PDF.');
+  } finally {
+    pagesEl.style.zoom = oldZoom;
+    setBusy(false);
+  }
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ════════════════════════════════════════════════
+   BOOT
+   ════════════════════════════════════════════════ */
+$('gfonts').href = 'https://fonts.googleapis.com/css2?' + FONTS.filter(f => f.g).map(f => 'family=' + f.g).join('&') + '&display=swap';
+initUI();
+syncUI();
+render();
+if (document.fonts) document.fonts.ready.then(render);
+window.addEventListener('beforeprint', equalizeRows);
+</script>
+</body>
+</html>

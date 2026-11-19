@@ -83,6 +83,7 @@ body {
   gap: 18px; height: 100%; width: 100%; overflow: hidden; padding: 16px;
 }
 .split-left { height: 100%; overflow-y: auto; padding-right: 6px; }
+.side-tools { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 10px; background: var(--app-panel-bg); }
 .split-right {
   height: 100%; overflow: auto; background: var(--stage-bg); border: 1px solid var(--card-border);
   border-radius: 8px; padding: 18px; display: flex; flex-direction: column; align-items: center;
@@ -357,6 +358,10 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
   <main class="content">
     <div class="split-layout">
       <aside class="split-left">
+        <div class="side-tools">
+          <button class="btn btn-secondary" onclick="setAllSections(false)" title="Open every settings section"><i class="ti ti-arrows-maximize"></i> Expand all</button>
+          <button class="btn btn-secondary" onclick="setAllSections(true)" title="Close every settings section"><i class="ti ti-arrows-minimize"></i> Collapse all</button>
+        </div>
 
         <!-- WEEK -->
         <div class="opt-group">
@@ -710,6 +715,19 @@ function fillFields() {
   $('stampSize').value = S.stampSize; $('logoOp').value = S.logoOp; $('weekNum').value = S.weekNum;
 }
 
+let COLLAPSED = {};
+function sectionKey(g) { return g.querySelector('.opt-group-title').textContent.trim(); }
+function setSection(g, on) {
+  g.classList.toggle('collapsed', on);
+  g.querySelector('.opt-group-header').setAttribute('aria-expanded', String(!on));
+  COLLAPSED[sectionKey(g)] = on;
+}
+function saveCollapsed() { lsSet(LS_COLLAPSED, JSON.stringify(COLLAPSED)); }
+function setAllSections(on) {
+  document.querySelectorAll('.opt-group').forEach(g => setSection(g, on));
+  saveCollapsed();
+}
+
 function initUI() {
   $('font').innerHTML = FONTS.map(f => `<option value="${f.name}" style="font-family:${f.css.replace(/"/g, '')}">${f.name}</option>`).join('');
 
@@ -748,20 +766,13 @@ function initUI() {
   });
 
   // Collapsible sections (remembered on this computer)
-  let collapsed = {};
-  try { collapsed = JSON.parse(lsGet(LS_COLLAPSED) || '{}'); } catch (e) {}
+  try { COLLAPSED = JSON.parse(lsGet(LS_COLLAPSED) || '{}'); } catch (e) {}
   document.querySelectorAll('.opt-group').forEach(g => {
     const head = g.querySelector('.opt-group-header');
-    const key = g.querySelector('.opt-group-title').textContent.trim();
     head.insertAdjacentHTML('beforeend', '<i class="ti ti-chevron-down chev"></i>');
     head.setAttribute('role', 'button'); head.tabIndex = 0;
-    const set = on => { g.classList.toggle('collapsed', on); head.setAttribute('aria-expanded', String(!on)); };
-    set(!!collapsed[key]);
-    const toggle = () => {
-      set(!g.classList.contains('collapsed'));
-      collapsed[key] = g.classList.contains('collapsed');
-      lsSet(LS_COLLAPSED, JSON.stringify(collapsed));
-    };
+    setSection(g, !!COLLAPSED[sectionKey(g)]);
+    const toggle = () => { setSection(g, !g.classList.contains('collapsed')); saveCollapsed(); };
     head.addEventListener('click', toggle);
     head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
   });

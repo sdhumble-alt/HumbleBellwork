@@ -350,7 +350,7 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
       <button class="hdr-btn" onclick="resetSettings()" title="Restore default settings (keeps logo &amp; week number)"><i class="ti ti-restore"></i> Reset</button>
       <button class="hdr-btn" onclick="savePdf()" title="Save as PDF"><i class="ti ti-file-type-pdf"></i> Save PDF</button>
       <button class="hdr-btn primary" onclick="printSheet()" title="Print"><i class="ti ti-printer"></i> Print</button>
-      <div class="toolbar-ver">V 1.0.0 &mdash; 2026-11-18</div>
+      <div class="toolbar-ver">V 1.1.0 &mdash; 2026-11-19</div>
     </div>
   </header>
 
@@ -437,21 +437,32 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
                 <select id="spacing"><option value="0.4">Extra wide</option><option value="0.34">Wide</option><option value="0.28">College</option><option value="0.25">¼ inch</option><option value="0.2">Small</option></select>
               </div>
             </div>
-            <div class="grid-2">
-              <div class="field-row"><label for="ruleColor">Line darkness</label>
-                <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option></select>
-              </div>
-              <div class="field-row"><label for="filler">Empty space</label>
-                <select id="filler"><option value="notes">Notes box</option><option value="custom">Text box (type your own)</option><option value="blank">Leave blank</option></select>
-              </div>
+            <div class="field-row"><label for="ruleColor">Line darkness</label>
+              <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option></select>
+            </div>
+            <div class="toggle-row"><input type="checkbox" id="showDates"><label for="showDates">Show dates on each day</label></div>
+          </div>
+        </div>
+
+        <!-- EMPTY SPACE -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-layout-bottombar"></i><span class="opt-group-title">Empty Space</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row"><label for="filler">Fill the open spot with</label>
+              <select id="filler"><option value="notes">Notes box</option><option value="custom">Text box (type your own)</option><option value="rubric">Rubric</option><option value="blank">Leave blank</option></select>
             </div>
             <div id="customRow" style="display:none">
               <div class="field-row"><label for="customTitle">Text box label</label><input type="text" id="customTitle"></div>
               <div class="field-row"><label for="customText">Text box text</label><textarea id="customText" rows="4"></textarea>
-                <div class="hint">Fills open space on the sheet. Turn off the rubric to free up a spot if there is none. Use **double stars** for bold or __double underscores__ for underline.</div>
+                <div class="hint">Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Use **double stars** for bold or __double underscores__ for underline.</div>
               </div>
             </div>
-            <div class="toggle-row"><input type="checkbox" id="showDates"><label for="showDates">Show dates on each day</label></div>
+            <div id="rubricRow" style="display:none">
+              <div class="field-row"><label for="rubricTitle">Rubric label</label><input type="text" id="rubricTitle"></div>
+              <div class="field-row"><label for="rubricText">Rubric items (one per line)</label><textarea id="rubricText" rows="7"></textarea>
+                <div class="hint">Each line gets a checkbox. Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Wrap text in **double stars** for bold or __double underscores__ for underline.</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -499,15 +510,17 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
           </div>
         </div>
 
-        <!-- RUBRIC -->
+        <!-- BACKUP -->
         <div class="opt-group">
-          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-list-check"></i><span class="opt-group-title">Scoring Rubric</span></div></div>
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-device-floppy"></i><span class="opt-group-title">Backup Settings</span></div></div>
           <div class="opt-group-body">
-            <div class="toggle-row"><input type="checkbox" id="rubricOn"><label for="rubricOn">Show rubric on the last page</label></div>
-            <div class="field-row"><label for="rubricTitle">Rubric label</label><input type="text" id="rubricTitle"></div>
-            <div class="field-row"><label for="rubricText">Rubric items (one per line)</label><textarea id="rubricText" rows="7"></textarea>
-              <div class="hint">Wrap text in **double stars** for bold or __double underscores__ for underline.</div>
+            <div class="hint" style="margin-bottom:10px">Your settings already save automatically in this browser. A backup file is an extra copy you keep yourself. Use it to get your settings back if your browser data gets cleared, or to move them to another computer or browser.</div>
+            <div class="grid-2">
+              <button class="btn btn-secondary" onclick="saveBackup()"><i class="ti ti-download"></i> Save to file</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('backupFile').click()"><i class="ti ti-folder-open"></i> Load from file</button>
             </div>
+            <input type="file" id="backupFile" accept=".json,application/json" style="display:none">
+            <div class="hint" style="margin-top:8px">The file includes your logo and week number. Loading a file replaces your current settings.</div>
           </div>
         </div>
 
@@ -581,7 +594,7 @@ const FONTS = [
 ];
 
 const DEFAULTS = {
-  v: 2,
+  v: 3,
   title: 'Daily Bellwork Recording Sheet',
   showPeriod: true,
   cols: 2,
@@ -590,7 +603,7 @@ const DEFAULTS = {
   ruling: 'lines',
   spacing: '0.34',
   ruleColor: '#9aa3ae',
-  filler: 'notes',
+  filler: 'rubric', // notes | custom | rubric | blank
   customTitle: 'Reminders',
   customText: 'Bellwork starts when the bell rings.\nWrite in complete sentences.\nKeep this sheet in your folder all week.',
   showDates: true,
@@ -607,7 +620,6 @@ const DEFAULTS = {
   reminderText: 'Remember to write ‘Absent’ if you are absent!',
   showWeek: false,
   weekNum: 1,
-  rubricOn: true,
   rubricTitle: 'Scoring for Thoughtful Engagement',
   rubricText: [
     '**Consistent & Thoughtful** (100%) You did Bellwork __every day__, and your answers show __you were thinking about the question__. You explained, gave examples, and/or made connections to what you know.',
@@ -629,18 +641,31 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return n
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
 function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
-function loadSettings() {
+// Builds a full settings object from saved data (this browser or a backup file).
+// Only known keys with the right type are kept, and older versions are upgraded.
+function migrate(saved) {
   const base = JSON.parse(JSON.stringify(DEFAULTS));
+  if (!saved || typeof saved !== 'object') return base;
+  Object.keys(DEFAULTS).forEach(k => {
+    const v = saved[k], d = DEFAULTS[k];
+    if (v === undefined || v === null) return;
+    if (Array.isArray(d) ? (Array.isArray(v) && v.length === d.length) : typeof v === typeof d) base[k] = v;
+  });
+  if (!base.noClass || !Array.isArray(base.noClass.days) || base.noClass.days.length !== 5) base.noClass = JSON.parse(JSON.stringify(DEFAULTS.noClass));
+  if (!['notes', 'custom', 'rubric', 'blank'].includes(base.filler)) base.filler = base.filler === 'extend' ? 'notes' : DEFAULTS.filler;
+  if (base.cols === 2) base.pages = 1;
+  // Older versions ticked Friday's reward by default; clear that once.
+  if (!(saved.v >= 2)) base.rewardDays = [false, false, false, false, false];
+  // Before v3 the rubric had its own on/off checkbox and took the open spot first.
+  if (!(saved.v >= 3)) base.filler = saved.rubricOn === false ? (base.filler === 'rubric' ? 'notes' : base.filler) : 'rubric';
+  base.v = DEFAULTS.v;
+  return base;
+}
+function loadSettings() {
   try {
     const raw = lsGet(LS_SETTINGS);
-    const saved = raw ? JSON.parse(raw) : null;
-    if (saved) Object.assign(base, saved);
-    if (base.filler === 'extend') base.filler = 'notes';
-    if (base.cols === 2) base.pages = 1;
-    // Older versions ticked Friday's reward by default; clear that once.
-    if (saved && !(saved.v >= 2)) { base.rewardDays = [false, false, false, false, false]; base.v = 2; }
-  } catch (e) {}
-  return base;
+    return migrate(raw ? JSON.parse(raw) : null);
+  } catch (e) { return migrate(null); }
 }
 function saveSettings() { lsSet(LS_SETTINGS, JSON.stringify(S)); }
 
@@ -675,24 +700,31 @@ function noClassDays() {
    ════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
 
+const SIMPLE_KEYS = ['title', 'noClassText', 'reminderText', 'rubricTitle', 'rubricText', 'customTitle', 'customText', 'ruling', 'spacing', 'ruleColor', 'filler', 'font', 'fontScale'];
+const CHECK_KEYS = ['showPeriod', 'showDates', 'showWeek'];
+
+// Put the current settings into the side panel's inputs.
+function fillFields() {
+  SIMPLE_KEYS.forEach(k => $(k).value = S[k]);
+  CHECK_KEYS.forEach(k => $(k).checked = !!S[k]);
+  $('stampSize').value = S.stampSize; $('logoOp').value = S.logoOp; $('weekNum').value = S.weekNum;
+}
+
 function initUI() {
   $('font').innerHTML = FONTS.map(f => `<option value="${f.name}" style="font-family:${f.css.replace(/"/g, '')}">${f.name}</option>`).join('');
 
   // Simple fields
-  const simple = ['title', 'noClassText', 'reminderText', 'rubricTitle', 'rubricText', 'customTitle', 'customText', 'ruling', 'spacing', 'ruleColor', 'filler', 'font', 'fontScale'];
-  simple.forEach(k => {
-    const el = $(k); el.value = S[k];
+  fillFields();
+  SIMPLE_KEYS.forEach(k => {
+    const el = $(k);
     el.addEventListener('input', () => { S[k] = el.value; commit(); });
   });
-  ['showPeriod', 'showDates', 'showWeek', 'rubricOn'].forEach(k => {
-    const el = $(k); el.checked = !!S[k];
+  CHECK_KEYS.forEach(k => {
+    const el = $(k);
     el.addEventListener('change', () => { S[k] = el.checked; commit(); });
   });
-  $('stampSize').value = S.stampSize;
   $('stampSize').addEventListener('input', e => { S.stampSize = +e.target.value; commit(); });
-  $('logoOp').value = S.logoOp;
   $('logoOp').addEventListener('input', e => { S.logoOp = +e.target.value; commit(); });
-  $('weekNum').value = S.weekNum;
   $('weekNum').addEventListener('input', e => { const v = parseInt(e.target.value, 10); S.weekNum = isNaN(v) ? 0 : v; commit(); });
 
   // Segmented controls
@@ -736,6 +768,8 @@ function initUI() {
 
   // Logo
   $('logoFile').addEventListener('change', handleLogo);
+  // Backup file
+  $('backupFile').addEventListener('change', loadBackup);
 
   // Fit preview on resize
   new ResizeObserver(fitPreview).observe(document.querySelector('.split-right'));
@@ -752,7 +786,6 @@ function syncUI() {
   $('stampPosRow').style.display = S.stampMode === 'box' ? '' : 'none';
   $('weekNum').disabled = !S.showWeek;
   $('reminderText').disabled = S.reminderMode === 'none';
-  $('rubricTitle').disabled = $('rubricText').disabled = !S.rubricOn;
 
   const dates = weekDates();
   $('rangePill').textContent = `${DAY_NAMES[0]} ${md(dates[0])}  to  ${DAY_NAMES[4]} ${md(dates[4])}`;
@@ -773,6 +806,7 @@ function syncUI() {
   $('logoRemove').style.opacity = LOGO ? 1 : .45;
 
   $('customRow').style.display = S.filler === 'custom' ? '' : 'none';
+  $('rubricRow').style.display = S.filler === 'rubric' ? '' : 'none';
   $('pagesTwo').disabled = S.cols === 2;
   $('pagesTwo').title = S.cols === 2 ? 'Two columns always fit on one page' : '';
   $('summaryBadge').textContent = `${S.pages} page${S.pages > 1 ? 's' : ''} · ${S.cols} column${S.cols > 1 ? 's' : ''}`;
@@ -796,10 +830,60 @@ function resetSettings() {
   if (!confirm('Reset all settings to defaults? Your logo and week number are kept.')) return;
   const keepWeek = S.weekNum;
   S = JSON.parse(JSON.stringify(DEFAULTS)); S.weekNum = keepWeek;
-  ['title', 'noClassText', 'reminderText', 'rubricTitle', 'rubricText', 'customTitle', 'customText', 'ruling', 'spacing', 'ruleColor', 'filler', 'font', 'fontScale'].forEach(k => $(k).value = S[k]);
-  ['showPeriod', 'showDates', 'showWeek', 'rubricOn'].forEach(k => $(k).checked = S[k]);
-  $('stampSize').value = S.stampSize; $('logoOp').value = S.logoOp; $('weekNum').value = S.weekNum;
+  fillFields();
   commit(); toast('Settings reset');
+}
+
+/* ════════════════════════════════════════════════
+   BACKUP FILE (save / load settings)
+   ════════════════════════════════════════════════ */
+const BACKUP_KIND = 'humble-bellwork-settings';
+const LOGO_RE = /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$/;
+
+async function saveBackup() {
+  const data = { kind: BACKUP_KIND, savedAt: new Date().toISOString(), settings: S, logo: LOGO || '' };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const name = `Bellwork Settings ${toISO(new Date())}.json`;
+  // Ask where to save (Chrome / Edge). Must happen right after the click.
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{ description: 'Bellwork settings', accept: { 'application/json': ['.json'] } }],
+      });
+      const w = await handle.createWritable();
+      await w.write(blob); await w.close();
+      toast(`Saved ${handle.name}`);
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // user cancelled
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast('Settings file saved to your Downloads');
+}
+
+async function loadBackup(e) {
+  const file = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (err) { data = null; }
+  if (!data || data.kind !== BACKUP_KIND || !data.settings || typeof data.settings !== 'object') {
+    toast('That file is not a Bellwork settings backup');
+    return;
+  }
+  if (!confirm('Replace your current settings with the ones in this file?')) return;
+  S = migrate(data.settings);
+  if (typeof data.logo === 'string' && LOGO_RE.test(data.logo)) {
+    LOGO = data.logo;
+    if (!lsSet(LS_LOGO, LOGO)) toast('Logo is used now, but could not be saved for next time');
+  }
+  fillFields();
+  commit();
+  toast('Settings loaded');
 }
 
 /* ════════════════════════════════════════════════
@@ -868,9 +952,9 @@ function dayHTML(i, dates, nc, span) {
   </div>`;
 }
 
-function customHTML() {
+function customHTML(inCell) {
   const lines = S.customText.split('\n').map(l => l.trim()).filter(Boolean);
-  return `<div class="rubric in-cell custom-box">
+  return `<div class="rubric ${inCell ? 'in-cell' : ''} custom-box">
     <div class="rubric-label"><span><b>${esc(S.customTitle)}</b></span></div>
     <div class="custom-body">${lines.map(l => `<p>${richText(l)}</p>`).join('')}</div>
   </div>`;
@@ -900,22 +984,23 @@ function render() {
   const html = groups.map((items, pi) => {
     const isFirst = pi === 0, isLast = pi === groups.length - 1;
     let empty = rows * cols - items.length;
-    const useRubricCell = S.rubricOn && isLast && empty > 0;
 
     const cells = items.map(d => dayHTML(d, dates, nc, 1));
-    if (useRubricCell) {
-      // Rubric takes one open slot, the same size as a day box.
-      cells.push(rubricHTML(true, 1));
-      empty -= 1;
+    // Rubric / text box: goes in one open slot on the last page (same size as a
+    // day box), or across the bottom of the last page if there is no open slot.
+    const boxHTML = S.filler === 'rubric' ? rubricHTML : S.filler === 'custom' ? customHTML : null;
+    let bottom = '';
+    if (boxHTML && isLast) {
+      if (empty > 0) { cells.push(boxHTML(true)); empty -= 1; }
+      else bottom = boxHTML(false);
     }
     if (S.filler === 'notes') for (let k = 0; k < empty; k++) cells.push(notesHTML());
-    if (S.filler === 'custom') for (let k = 0; k < empty; k++) cells.push(customHTML());
 
     let body = headerHTML(dates, !isFirst);
     if (isFirst && S.stampMode === 'top') body += stampRowHTML(dates, nc);
     if (isFirst && S.reminderMode === 'top' && S.reminderText.trim()) body += `<div class="reminder-top">${esc(S.reminderText)}</div>`;
     body += `<div class="days" data-rows="${rows}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr)); grid-template-rows: repeat(${rows}, minmax(0, 1fr));">${cells.join('')}</div>`;
-    if (S.rubricOn && isLast && !useRubricCell) body += rubricHTML(false);
+    body += bottom;
 
     const style = `font-family:${font}; --fs:${S.fontScale}; --sp:${S.spacing}in; --rule:${S.ruleColor}; --stamp:${S.stampSize}in; --logo-op:${S.logoOp};`;
     return `<div class="page-wrap">${groups.length > 1 ? `<div class="page-label">Page ${pi + 1}</div>` : ''}<div class="page ${S.headerStyle === 'outline' ? 'hd-outline' : ''}" style="${style.replace(/"/g, "'")}">${body}</div></div>`;

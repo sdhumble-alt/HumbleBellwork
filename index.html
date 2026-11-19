@@ -444,31 +444,9 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
           </div>
         </div>
 
-        <!-- EMPTY SPACE -->
-        <div class="opt-group">
-          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-layout-bottombar"></i><span class="opt-group-title">Empty Space</span></div></div>
-          <div class="opt-group-body">
-            <div class="field-row"><label for="filler">Fill the open spot with</label>
-              <select id="filler"><option value="notes">Notes box</option><option value="custom">Text box (type your own)</option><option value="rubric">Rubric</option><option value="blank">Leave blank</option></select>
-            </div>
-            <div id="customRow" style="display:none">
-              <div class="field-row"><label for="customTitle">Text box label</label><input type="text" id="customTitle"></div>
-              <div class="field-row"><label for="customText">Text box text</label><textarea id="customText" rows="4"></textarea>
-                <div class="hint">Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Use **double stars** for bold or __double underscores__ for underline.</div>
-              </div>
-            </div>
-            <div id="rubricRow" style="display:none">
-              <div class="field-row"><label for="rubricTitle">Rubric label</label><input type="text" id="rubricTitle"></div>
-              <div class="field-row"><label for="rubricText">Rubric items (one per line)</label><textarea id="rubricText" rows="7"></textarea>
-                <div class="hint">Each line gets a checkbox. Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Wrap text in **double stars** for bold or __double underscores__ for underline.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- STAMPS -->
         <div class="opt-group">
-          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-stamp"></i><span class="opt-group-title">Stamp Boxes</span></div></div>
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-rubber-stamp"></i><span class="opt-group-title">Stamp Boxes</span></div></div>
           <div class="opt-group-body">
             <div class="field-row">
               <div class="seg" data-key="stampMode"><button data-v="top"><i class="ti ti-layout-navbar"></i> At top</button><button data-v="box"><i class="ti ti-box-align-top-right"></i> In boxes</button><button data-v="none"><i class="ti ti-ban"></i> None</button></div>
@@ -507,6 +485,28 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
               <div class="seg" data-key="reminderMode"><button data-v="top">Top of page</button><button data-v="box">In each day</button><button data-v="none">Hidden</button></div>
             </div>
             <div class="field-row"><label for="reminderText">Reminder text</label><input type="text" id="reminderText"></div>
+          </div>
+        </div>
+
+        <!-- EMPTY SPACE -->
+        <div class="opt-group">
+          <div class="opt-group-header"><div class="opt-group-header-left"><i class="ti ti-layout-bottombar"></i><span class="opt-group-title">Empty Space</span></div></div>
+          <div class="opt-group-body">
+            <div class="field-row"><label for="filler">Fill the open spot with</label>
+              <select id="filler"><option value="notes">Notes box</option><option value="custom">Text box (type your own)</option><option value="rubric">Rubric</option><option value="blank">Leave blank</option></select>
+            </div>
+            <div id="customRow" style="display:none">
+              <div class="field-row"><label for="customTitle">Text box label</label><input type="text" id="customTitle"></div>
+              <div class="field-row"><label for="customText">Text box text</label><textarea id="customText" rows="4"></textarea>
+                <div class="hint">Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Use **double stars** for bold or __double underscores__ for underline.</div>
+              </div>
+            </div>
+            <div id="rubricRow" style="display:none">
+              <div class="field-row"><label for="rubricTitle">Rubric label</label><input type="text" id="rubricTitle"></div>
+              <div class="field-row"><label for="rubricText">Rubric items (one per line)</label><textarea id="rubricText" rows="7"></textarea>
+                <div class="hint">Each line gets a checkbox. Fills the open spot on the last page. If there is no open spot (1 column, 1 page), it goes across the bottom instead. Wrap text in **double stars** for bold or __double underscores__ for underline.</div>
+              </div>
+            </div>
           </div>
         </div>
 

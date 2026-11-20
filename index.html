@@ -611,6 +611,16 @@ const FONTS = [
   { name: 'Verdana', css: "Verdana, Geneva, sans-serif" },
 ];
 
+// Defined before DEFAULTS so they exist when saved settings load at startup.
+const MARGIN_MIN = 0.1, MARGIN_MAX = 1;
+const MARGIN_IDS = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+// Keeps a margin between 0.1" and 1", rounded to the nearest hundredth.
+function clampMargin(v, fallback) {
+  const n = parseFloat(v);
+  if (!isFinite(n)) return fallback;
+  return Math.round(Math.min(MARGIN_MAX, Math.max(MARGIN_MIN, n)) * 100) / 100;
+}
+
 const DEFAULTS = {
   v: 3,
   title: 'Daily Bellwork Recording Sheet',
@@ -660,15 +670,6 @@ let monday = defaultMonday();
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
 function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
-
-const MARGIN_MIN = 0.1, MARGIN_MAX = 1;
-const MARGIN_IDS = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
-// Keeps a margin between 0.1" and 1", rounded to the nearest hundredth.
-function clampMargin(v, fallback) {
-  const n = parseFloat(v);
-  if (!isFinite(n)) return fallback;
-  return Math.round(Math.min(MARGIN_MAX, Math.max(MARGIN_MIN, n)) * 100) / 100;
-}
 
 // Builds a full settings object from saved data (this browser or a backup file).
 // Only known keys with the right type are kept, and older versions are upgraded.

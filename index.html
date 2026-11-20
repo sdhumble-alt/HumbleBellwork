@@ -651,6 +651,7 @@ const DEFAULTS = {
   reminderText: 'Remember to write ‘Absent’ if you are absent!',
   showWeek: false,
   weekNum: 1,
+  weekAnchor: '', // the Monday (YYYY-MM-DD) that weekNum belongs to
   rubricTitle: 'Scoring for Thoughtful Engagement',
   rubricText: [
     '**Consistent & Thoughtful** (100%) You did Bellwork __every day__, and your answers show __you were thinking about the question__. You explained, gave examples, and/or made connections to what you know.',
@@ -664,6 +665,7 @@ const DEFAULTS = {
 let S = loadSettings();
 let LOGO = lsGet(LS_LOGO) || '';
 let monday = defaultMonday();
+followWeekNum();
 
 /* ════════════════════════════════════════════════
    STORAGE
@@ -721,6 +723,18 @@ function snapToMonday(d) {
   if (dow === 0) return addDays(d, 1);      // Sunday → next Monday
   if (dow === 6) return addDays(d, 2);      // Saturday → next Monday
   return addDays(d, 1 - dow);               // Tue–Fri → that week's Monday
+}
+function weeksBetween(a, b) { return Math.round((b - a) / (7 * 864e5)); }
+// The week number is saved together with the Monday it belongs to. When the sheet
+// is opened for a different week, move the number by the same count of weeks.
+function followWeekNum() {
+  if (S.weekAnchor) S.weekNum = Math.max(0, (S.weekNum || 0) + weeksBetween(fromISO(S.weekAnchor), monday));
+  S.weekAnchor = toISO(monday);
+}
+function setMonday(d) {
+  S.weekNum = Math.max(0, (S.weekNum || 0) + weeksBetween(monday, d));
+  monday = d; S.weekAnchor = toISO(monday);
+  $('monday').value = toISO(monday); $('weekNum').value = S.weekNum;
 }
 function weekDates() { return DAY_NAMES.map((_, i) => addDays(monday, i)); }
 function noClassDays() {
@@ -800,7 +814,7 @@ function initUI() {
     if (S.marginLink) { const v = S.margins[0]; S.margins = [v, v, v, v]; MARGIN_IDS.forEach(id => $(id).value = v); }
     commit();
   });
-  $('weekNum').addEventListener('input', e => { const v = parseInt(e.target.value, 10); S.weekNum = isNaN(v) ? 0 : v; commit(); });
+  $('weekNum').addEventListener('input', e => { const v = parseInt(e.target.value, 10); S.weekNum = isNaN(v) ? 0 : v; S.weekAnchor = toISO(monday); commit(); });
 
   // Segmented controls
   document.querySelectorAll('.seg').forEach(seg => {
@@ -819,7 +833,7 @@ function initUI() {
     const picked = fromISO(e.target.value);
     const snapped = snapToMonday(picked);
     if (snapped.getTime() !== picked.getTime()) toast(`Moved to Monday, ${md(snapped)}`);
-    monday = snapped; $('monday').value = toISO(monday); commit();
+    setMonday(snapped); commit();
   });
 
   // Collapsible sections (remembered on this computer)
@@ -887,8 +901,7 @@ function toggleNoClass(i, on) {
 function toggleReward(i, on) { S.rewardDays = S.rewardDays.slice(); S.rewardDays[i] = on; commit(); }
 
 function shiftWeek(dir) {
-  monday = addDays(monday, 7 * dir); $('monday').value = toISO(monday);
-  S.weekNum = Math.max(0, (S.weekNum || 0) + dir); $('weekNum').value = S.weekNum;
+  setMonday(addDays(monday, 7 * dir));
   commit();
 }
 
@@ -897,7 +910,7 @@ function commit() { saveSettings(); syncUI(); render(); }
 function resetSettings() {
   if (!confirm('Reset all settings to defaults? Your logo and week number are kept.')) return;
   const keepWeek = S.weekNum;
-  S = JSON.parse(JSON.stringify(DEFAULTS)); S.weekNum = keepWeek;
+  S = JSON.parse(JSON.stringify(DEFAULTS)); S.weekNum = keepWeek; S.weekAnchor = toISO(monday);
   fillFields();
   commit(); toast('Settings reset');
 }
@@ -945,6 +958,7 @@ async function loadBackup(e) {
   }
   if (!confirm('Replace your current settings with the ones in this file?')) return;
   S = migrate(data.settings);
+  followWeekNum();
   if (typeof data.logo === 'string' && LOGO_RE.test(data.logo)) {
     LOGO = data.logo;
     if (!lsSet(LS_LOGO, LOGO)) toast('Logo is used now, but could not be saved for next time');

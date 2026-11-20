@@ -284,10 +284,11 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
 .day-label .dt { font-weight: 400; font-style: normal; font-size: 0.82em; opacity: .9; }
 .day-body { flex: 1; position: relative; min-height: 0; min-width: 0; }
 
-.rule-lines { background-image: linear-gradient(to bottom, transparent calc(var(--sp) - 1px), var(--rule) calc(var(--sp) - 1px), var(--rule) var(--sp)); background-size: 100% var(--sp); background-position: 0 0; }
-.rule-grid { background-image: linear-gradient(to bottom, var(--rule) 1px, transparent 1px), linear-gradient(to right, var(--rule) 1px, transparent 1px); background-size: var(--sp) var(--sp); background-position: -1px -1px; }
-.rule-dots { background-image: radial-gradient(circle, var(--rule) 1.1px, transparent 1.5px); background-size: var(--sp) var(--sp); background-position: calc(var(--sp) / -2) calc(var(--sp) / -2); }
-.rule-blank { background: none; }
+/* Ruling is drawn as a real SVG stroke (not a CSS background gradient) so it prints
+   the same from the browser's Print dialog as it does in the saved PDF. */
+.rule-layer { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+.rule-layer svg { display: block; width: 8.5in; height: 11in; }
+.rule-layer path { fill: none; stroke: var(--rule); }
 
 .stamp-in {
   position: absolute; top: 0.07in; right: 0.07in; width: var(--stamp); height: var(--stamp);
@@ -354,7 +355,7 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
       <button class="hdr-btn" onclick="resetSettings()" title="Restore default settings (keeps logo &amp; week number)"><i class="ti ti-restore"></i> Reset</button>
       <button class="hdr-btn" onclick="savePdf()" title="Save as PDF"><i class="ti ti-file-type-pdf"></i> Save PDF</button>
       <button class="hdr-btn primary" onclick="printSheet()" title="Print"><i class="ti ti-printer"></i> Print</button>
-      <div class="toolbar-ver">V 1.1.0 &mdash; 2026-11-19</div>
+      <div class="toolbar-ver">V 1.1.2 &mdash; 2026-11-20</div>
     </div>
   </header>
 
@@ -1006,6 +1007,22 @@ function stampRowHTML(dates, nc) {
   }).join('')}</div>`;
 }
 
+// Ruled lines / grid / dots as one SVG path, in inches (1 user unit = 1in).
+function ruleLayerHTML() {
+  if (S.ruling === 'blank') return '';
+  const sp = parseFloat(S.spacing), W = 8.5, H = 11, px = 1 / 96, f = n => +n.toFixed(4);
+  let d = '', sw = px, cap = 'butt';
+  if (S.ruling === 'lines' || S.ruling === 'grid')
+    for (let k = 1; k * sp < H; k++) d += `M0 ${f(k * sp - px / 2)}H${W}`;
+  if (S.ruling === 'grid')
+    for (let k = 1; k * sp < W; k++) d += `M${f(k * sp - px / 2)} 0V${H}`;
+  if (S.ruling === 'dots') {
+    sw = 2.6 * px; cap = 'round';
+    for (let r = 0; r * sp <= H; r++) for (let c = 0; c * sp <= W; c++) d += `M${f(c * sp)} ${f(r * sp)}h0.0001`;
+  }
+  return `<div class="rule-layer"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet" aria-hidden="true"><path d="${d}" stroke-width="${f(sw)}" stroke-linecap="${cap}"/></svg></div>`;
+}
+
 function dayHTML(i, dates, nc, span) {
   const off = nc[i];
   const stamp = S.stampMode === 'box'
@@ -1015,7 +1032,7 @@ function dayHTML(i, dates, nc, span) {
   const date = S.showDates ? `<span class="dt">${md(dates[i])}</span>` : '';
   return `<div class="day lbl-${S.labelStyle} ${off ? 'off' : ''}" ${span > 1 ? `style="grid-row: span ${span}"` : ''}>
     <div class="day-label">${DAY_NAMES[i]}${date}</div>
-    <div class="day-body rule-${S.ruling}">${stamp}${rem}${nct}</div>
+    <div class="day-body rule-${S.ruling}">${off ? '' : ruleLayerHTML()}${stamp}${rem}${nct}</div>
   </div>`;
 }
 
@@ -1027,7 +1044,7 @@ function customHTML(inCell) {
   </div>`;
 }
 function notesHTML() {
-  return `<div class="day lbl-${S.labelStyle}"><div class="day-label">Notes</div><div class="day-body rule-${S.ruling}"></div></div>`;
+  return `<div class="day lbl-${S.labelStyle}"><div class="day-label">Notes</div><div class="day-body rule-${S.ruling}">${ruleLayerHTML()}</div></div>`;
 }
 
 function rubricHTML(inCell, span) {

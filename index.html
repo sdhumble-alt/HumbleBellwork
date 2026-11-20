@@ -446,7 +446,7 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
               </div>
             </div>
             <div class="field-row"><label for="ruleColor">Line darkness</label>
-              <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option></select>
+              <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option><option value="#000000">Black (for B&amp;W printers)</option></select>
             </div>
             <div class="toggle-row"><input type="checkbox" id="showDates"><label for="showDates">Show dates on each day</label></div>
             <div class="field-row" style="margin-top:6px"><span class="lbl">Page margins (inches)</span>
@@ -630,7 +630,7 @@ const DEFAULTS = {
   labelStyle: 'side',
   ruling: 'lines',
   spacing: '0.34',
-  ruleColor: '#9aa3ae',
+  ruleColor: '#000000',
   filler: 'rubric', // notes | custom | rubric | blank
   customTitle: 'Reminders',
   customText: 'Bellwork starts when the bell rings.\nWrite in complete sentences.\nKeep this sheet in your folder all week.',

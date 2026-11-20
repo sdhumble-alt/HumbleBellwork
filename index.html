@@ -116,6 +116,9 @@ input[type=range] { width: 100%; accent-color: var(--btn-primary-bg); }
 .field-row > label, .lbl { font-size: 9.5pt; color: var(--input-label); font-weight: 600; }
 .hint { font-size: 8.5pt; color: #64748b; line-height: 1.35; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.grid-4 .field-row { margin-bottom: 0; }
+.grid-4 input[type=number] { text-align: center; padding-left: 4px; padding-right: 4px; }
 .toggle-row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
 .toggle-row label { font-size: 10pt; cursor: pointer; user-select: none; }
 input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: var(--btn-primary-bg); }
@@ -219,7 +222,7 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
   --fs: 1;
   --nc-a: #e3e6ea; --nc-b: #f1f3f5;
   width: 8.5in; height: 11in; background: #fff; color: var(--ink);
-  padding: 0.4in; display: flex; flex-direction: column; gap: 0.12in; overflow: hidden;
+  padding: 0.25in; display: flex; flex-direction: column; gap: 0.12in; overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,.15); position: relative;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
   font-size: calc(11pt * var(--fs));
@@ -446,6 +449,16 @@ input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 
               <select id="ruleColor"><option value="#c4cad2">Light</option><option value="#9aa3ae">Medium</option><option value="#5b6470">Dark</option></select>
             </div>
             <div class="toggle-row"><input type="checkbox" id="showDates"><label for="showDates">Show dates on each day</label></div>
+            <div class="field-row" style="margin-top:6px"><span class="lbl">Page margins (inches)</span>
+              <div class="grid-4">
+                <div class="field-row"><label for="marginTop">Top</label><input type="number" id="marginTop" min="0.1" max="1" step="0.05"></div>
+                <div class="field-row"><label for="marginBottom">Bottom</label><input type="number" id="marginBottom" min="0.1" max="1" step="0.05"></div>
+                <div class="field-row"><label for="marginLeft">Left</label><input type="number" id="marginLeft" min="0.1" max="1" step="0.05"></div>
+                <div class="field-row"><label for="marginRight">Right</label><input type="number" id="marginRight" min="0.1" max="1" step="0.05"></div>
+              </div>
+              <div class="toggle-row" style="margin:6px 0 0"><input type="checkbox" id="marginLink"><label for="marginLink">Same on all sides</label></div>
+              <div class="hint">Each margin can be 0.1&Prime; to 1&Prime;.</div>
+            </div>
           </div>
         </div>
 
@@ -615,6 +628,8 @@ const DEFAULTS = {
   stampMode: 'box',
   stampPos: 'top',
   stampSize: 0.85,
+  margins: [0.25, 0.25, 0.25, 0.25], // top, right, bottom, left (inches)
+  marginLink: true,
   logoOp: 0.6,
   rewardDays: [false, false, false, false, false],
   noClassText: 'No Class',
@@ -646,6 +661,15 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return n
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
 function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
+const MARGIN_MIN = 0.1, MARGIN_MAX = 1;
+const MARGIN_IDS = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+// Keeps a margin between 0.1" and 1", rounded to the nearest hundredth.
+function clampMargin(v, fallback) {
+  const n = parseFloat(v);
+  if (!isFinite(n)) return fallback;
+  return Math.round(Math.min(MARGIN_MAX, Math.max(MARGIN_MIN, n)) * 100) / 100;
+}
+
 // Builds a full settings object from saved data (this browser or a backup file).
 // Only known keys with the right type are kept, and older versions are upgraded.
 function migrate(saved) {
@@ -659,6 +683,7 @@ function migrate(saved) {
   if (!base.noClass || !Array.isArray(base.noClass.days) || base.noClass.days.length !== 5) base.noClass = JSON.parse(JSON.stringify(DEFAULTS.noClass));
   if (!['notes', 'custom', 'rubric', 'blank'].includes(base.filler)) base.filler = base.filler === 'extend' ? 'notes' : DEFAULTS.filler;
   if (base.cols === 2) base.pages = 1;
+  base.margins = base.margins.map((m, i) => clampMargin(m, DEFAULTS.margins[i]));
   // Older versions ticked Friday's reward by default; clear that once.
   if (!(saved.v >= 2)) base.rewardDays = [false, false, false, false, false];
   // Before v3 the rubric had its own on/off checkbox and took the open spot first.
@@ -713,6 +738,8 @@ function fillFields() {
   SIMPLE_KEYS.forEach(k => $(k).value = S[k]);
   CHECK_KEYS.forEach(k => $(k).checked = !!S[k]);
   $('stampSize').value = S.stampSize; $('logoOp').value = S.logoOp; $('weekNum').value = S.weekNum;
+  MARGIN_IDS.forEach((id, i) => $(id).value = S.margins[i]);
+  $('marginLink').checked = !!S.marginLink;
 }
 
 let COLLAPSED = {};
@@ -743,6 +770,34 @@ function initUI() {
   });
   $('stampSize').addEventListener('input', e => { S.stampSize = +e.target.value; commit(); });
   $('logoOp').addEventListener('input', e => { S.logoOp = +e.target.value; commit(); });
+  // Margins: apply while typing only when the number is in range; snap into range when the field is left.
+  const setMargin = (i, v) => {
+    if (S.marginLink) S.margins = [v, v, v, v]; else S.margins[i] = v;
+    MARGIN_IDS.forEach((id, j) => { if (j !== i || S.marginLink) $(id).value = S.margins[j]; });
+  };
+  MARGIN_IDS.forEach((id, i) => {
+    const el = $(id);
+    el.addEventListener('input', () => {
+      const n = parseFloat(el.value);
+      if (!isFinite(n) || n < MARGIN_MIN || n > MARGIN_MAX) return;
+      const v = Math.round(n * 100) / 100;
+      if (S.marginLink) { S.margins = [v, v, v, v]; MARGIN_IDS.forEach((o, j) => { if (j !== i) $(o).value = v; }); }
+      else S.margins[i] = v;
+      commit();
+    });
+    el.addEventListener('change', () => {
+      const v = clampMargin(el.value, S.margins[i]);
+      const n = parseFloat(el.value);
+      if (!isFinite(n) || n < MARGIN_MIN || n > MARGIN_MAX) toast(`Margins must be between ${MARGIN_MIN}" and ${MARGIN_MAX}"`);
+      el.value = v;
+      setMargin(i, v); commit();
+    });
+  });
+  $('marginLink').addEventListener('change', e => {
+    S.marginLink = e.target.checked;
+    if (S.marginLink) { const v = S.margins[0]; S.margins = [v, v, v, v]; MARGIN_IDS.forEach(id => $(id).value = v); }
+    commit();
+  });
   $('weekNum').addEventListener('input', e => { const v = parseInt(e.target.value, 10); S.weekNum = isNaN(v) ? 0 : v; commit(); });
 
   // Segmented controls
@@ -1013,7 +1068,7 @@ function render() {
     body += `<div class="days" data-rows="${rows}" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr)); grid-template-rows: repeat(${rows}, minmax(0, 1fr));">${cells.join('')}</div>`;
     body += bottom;
 
-    const style = `font-family:${font}; --fs:${S.fontScale}; --sp:${S.spacing}in; --rule:${S.ruleColor}; --stamp:${S.stampSize}in; --logo-op:${S.logoOp};`;
+    const style = `font-family:${font}; --fs:${S.fontScale}; --sp:${S.spacing}in; --rule:${S.ruleColor}; --stamp:${S.stampSize}in; --logo-op:${S.logoOp}; padding:${S.margins.map(m => m + 'in').join(' ')};`;
     return `<div class="page-wrap">${groups.length > 1 ? `<div class="page-label">Page ${pi + 1}</div>` : ''}<div class="page ${S.headerStyle === 'outline' ? 'hd-outline' : ''}" style="${style.replace(/"/g, "'")}">${body}</div></div>`;
   }).join('');
 
